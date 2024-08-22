@@ -1,0 +1,9 @@
+menu "Tempus Redux"
+
+config CLOCKSON_WIFI_SSID
+	string "WiFi Network"
+
+config CLOCKSON_WIFI_PASSWORD
+	string "WiFi Password"
+
+endmenu
