@@ -1,5 +1,5 @@
 /*
- * tempus-redux - ESP32 Radio clock signal generator
+ * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
  * Copyright 2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 
 #include <chrono>
 
+#include "clockson/calendar.h"
 #include "clockson/network.h"
 
 using namespace clockson;
@@ -62,7 +63,7 @@ extern "C" void app_main() {
 		auto now = std::chrono::system_clock::now();
 		uint64_t now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 
-		ESP_LOGI(TAG, "Time: %" PRIu64 " sntp=%d", now_ms, sntp_get_sync_status());
+		ESP_LOGI(TAG, "Time: %" PRIu64 " sntp=%d %s", now_ms, sntp_get_sync_status(), Calendar{now}.to_string().c_str());
 		sleep(1);
 	}
 }

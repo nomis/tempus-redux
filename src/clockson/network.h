@@ -1,5 +1,5 @@
 /*
- * tempus-redux - ESP32 Radio clock signal generator
+ * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
  * Copyright 2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify

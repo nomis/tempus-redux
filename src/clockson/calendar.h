@@ -18,11 +18,40 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstddef>
-#include <sdkconfig.h>
+#include <string>
 
 namespace clockson {
 
-static constexpr const char *TAG = "clockson";
+class Calendar {
+public:
+	Calendar(time_t t);
+	Calendar(std::chrono::system_clock::time_point tp);
+	~Calendar() = default;
+
+	uint16_t year() const { return year_; }
+	uint8_t month() const { return month_; }
+	uint8_t day() const { return day_; }
+	uint8_t weekday() const { return weekday_; } /* 0 = Sunday */
+	uint8_t hour() const { return hour_; }
+	uint8_t minute() const { return minute_; }
+	bool summer() const { return summer_; }
+	bool summer_change_soon() const { return summer_change_soon_; }
+
+	std::string to_string() const;
+
+private:
+	Calendar(time_t t, bool next);
+
+	uint16_t year_ = 0;
+	uint8_t month_ = 0;
+	uint8_t day_ = 0;
+	uint8_t weekday_ = 0; /* 0 = Sunday */
+	uint8_t hour_ = 0;
+	uint8_t minute_ = 0;
+	bool summer_ = false;
+	bool summer_change_soon_ = false;
+};
 
 } // namespace clockson

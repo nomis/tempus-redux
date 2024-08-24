@@ -1,5 +1,6 @@
 idf_component_register(
 	SRCS
+		calendar.cpp
 		main.cpp
 		network.cpp
 
