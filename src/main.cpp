@@ -20,16 +20,27 @@
 
 #include <esp_err.h>
 #include <esp_log.h>
+#include <esp_sntp.h>
 #include <freertos/FreeRTOS.h>
 #include <driver/gpio.h>
+#include <nvs_flash.h>
+#include <unistd.h>
+
+#include <chrono>
+
+#include "clockson/network.h"
 
 using namespace clockson;
 
 extern "C" void app_main() {
-	TaskStatus_t status;
+	esp_err_t err = nvs_flash_init();
+	if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		err = nvs_flash_init();
+	}
+	ESP_ERROR_CHECK(err);
 
-	vTaskGetInfo(nullptr, &status, pdTRUE, eRunning);
-	ESP_LOGD(TAG, "Free stack: %lu", status.usStackHighWaterMark);
+	new Network{};
 
 	gpio_num_t pin = GPIO_NUM_1;
 	gpio_config_t config{};
@@ -42,19 +53,16 @@ extern "C" void app_main() {
 
 	ESP_ERROR_CHECK(gpio_config(&config));
 
-	bool last_state = gpio_get_level(pin);
-	uint64_t start = esp_timer_get_time();
+	TaskStatus_t status;
+
+	vTaskGetInfo(nullptr, &status, pdTRUE, eRunning);
+	ESP_LOGI(TAG, "Free stack: %lu", status.usStackHighWaterMark);
 
 	while (true) {
-		bool state = gpio_get_level(pin);
+		auto now = std::chrono::system_clock::now();
+		uint64_t now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 
-		if (state != last_state) {
-			uint64_t stop = esp_timer_get_time();
-
-			ESP_LOGI(TAG, "%d: %" PRIu64, last_state, (stop - start) / 1000U);
-			start = stop;
-			last_state = state;
-		}
+		ESP_LOGI(TAG, "Time: %" PRIu64 " sntp=%d", now_ms, sntp_get_sync_status());
+		sleep(1);
 	}
-
 }

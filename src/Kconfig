@@ -6,4 +6,7 @@ config CLOCKSON_WIFI_SSID
 config CLOCKSON_WIFI_PASSWORD
 	string "WiFi Password"
 
+config CLOCKSON_DHCP_HOSTNAME
+	string "DHCP Hostname"
+
 endmenu
