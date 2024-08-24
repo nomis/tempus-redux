@@ -1,7 +1,4 @@
-.PHONY: all target config build clean flash erase-ota app-flash monitor cppcheck pipenv
-
-PIPENV=$(CURDIR)/pipenv
-PYTHON=$(PIPENV)/.venv/bin/python
+.PHONY: all target config build clean flash erase-ota app-flash monitor cppcheck
 
 all: build
 
@@ -16,7 +13,6 @@ build:
 
 clean:
 	idf.py clean
-	+$(MAKE) -C $(PIPENV) -L clean
 
 flash: build
 	idf.py flash
