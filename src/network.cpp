@@ -22,17 +22,19 @@
 #include <esp_log.h>
 #include <esp_netif_sntp.h>
 #include <esp_sntp.h>
+#include <esp_timer.h>
 #include <esp_wifi.h>
+#include <sys/time.h>
 
 #include <cstdio>
 #include <cstring>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 namespace clockson {
 
-static void network_event_handler(void *arg, esp_event_base_t event_base,
-		int32_t event_id, void *event_data) {
-	reinterpret_cast<Network*>(arg)->event_handler(event_base, event_id, event_data);
-}
+uint64_t Network::time_sync_us_{0};
 
 Network::Network() {
 	ESP_ERROR_CHECK(esp_netif_init());
@@ -51,9 +53,9 @@ Network::Network() {
 
 	sntp_cfg.server_from_dhcp = true;
 	sntp_cfg.start = true;
+	sntp_cfg.sync_cb = &network::time_synced;
 
 	ESP_ERROR_CHECK(esp_netif_sntp_init(&sntp_cfg));
-
 
 	wifi_config_t wifi_cfg{};
 
@@ -76,15 +78,24 @@ Network::Network() {
 		esp_event_handler_instance_t instance_any_id;
 		esp_event_handler_instance_t instance_got_ip;
 		ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-			ESP_EVENT_ANY_ID, &network_event_handler, this, &instance_any_id));
+			ESP_EVENT_ANY_ID, &network::event_handler, this, &instance_any_id));
 		ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-			IP_EVENT_STA_GOT_IP, &network_event_handler, this, &instance_got_ip));
+			IP_EVENT_STA_GOT_IP, &network::event_handler, this, &instance_got_ip));
 
 		ESP_ERROR_CHECK(esp_wifi_start());
 	} else {
 		ESP_LOGI(TAG, "WiFi unconfigured");
 	}
 }
+
+namespace network {
+
+void event_handler(void *arg, esp_event_base_t event_base,
+		int32_t event_id, void *event_data) {
+	reinterpret_cast<Network*>(arg)->event_handler(event_base, event_id, event_data);
+}
+
+} // namespace network
 
 void Network::event_handler(esp_event_base_t event_base, int32_t event_id,
 		void *event_data) {
@@ -99,6 +110,26 @@ void Network::event_handler(esp_event_base_t event_base, int32_t event_id,
 		ESP_LOGI(TAG, "WiFi IPv4 address: " IPSTR, IP2STR(&event->ip_info.ip));
 		sntp_restart();
 	}
+}
+
+namespace network {
+
+void time_synced(struct timeval *tv) {
+	Network::time_synced();
+}
+
+} // namespace network
+
+void Network::time_synced() {
+	time_sync_us_ = esp_timer_get_time();
+	ESP_LOGI(TAG, "SNTP sync");
+}
+
+bool Network::time_ok() {
+	uint64_t now = esp_timer_get_time();
+
+	return time_sync_us_ > 0
+		&& (now - time_sync_us_ < std::chrono::microseconds(3h).count());
 }
 
 } // namespace clockson

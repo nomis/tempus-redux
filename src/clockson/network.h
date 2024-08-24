@@ -21,19 +21,39 @@
 #include <cstddef>
 #include <esp_wifi.h>
 #include <sdkconfig.h>
+#include <sys/time.h>
 
 namespace clockson {
+
+namespace network {
+
+void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
+	void *event_data);
+
+void time_synced(struct timeval *tv);
+
+} // namespace network
 
 class Network {
 public:
 	Network();
 	~Network() = delete;
 
-	void event_handler(esp_event_base_t event_base, int32_t event_id,
-		void *event_data);
+	static bool time_ok();
 
 private:
 	static constexpr const char *TAG = "clockson.Network";
+
+	friend void network::event_handler(void *arg, esp_event_base_t event_base,
+		int32_t event_id, void *event_data);
+	friend void network::time_synced(struct timeval *tv);
+
+	static void time_synced();
+
+	void event_handler(esp_event_base_t event_base, int32_t event_id,
+		void *event_data);
+
+	static uint64_t time_sync_us_;
 };
 
 } // namespace clockson

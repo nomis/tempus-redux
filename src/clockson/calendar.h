@@ -47,15 +47,15 @@ public:
 private:
 	Calendar(time_t t, bool next);
 
-	uint32_t utc_time_ = 0;
-	uint16_t year_ = 0;
-	uint8_t month_ = 0;
-	uint8_t day_ = 0;
-	uint8_t weekday_ = 0; /* 0 = Sunday */
-	uint8_t hour_ = 0;
-	uint8_t minute_ = 0;
-	bool summer_ = false;
-	bool summer_change_soon_ = false;
+	uint32_t utc_time_{0};
+	uint16_t year_{0};
+	uint8_t month_{0};
+	uint8_t day_{0};
+	uint8_t weekday_{0}; /* 0 = Sunday */
+	uint8_t hour_{0};
+	uint8_t minute_{0};
+	bool summer_{false};
+	bool summer_change_soon_{false};
 };
 
 } // namespace clockson

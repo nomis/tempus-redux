@@ -20,7 +20,6 @@
 
 #include <esp_err.h>
 #include <esp_log.h>
-#include <esp_sntp.h>
 #include <freertos/FreeRTOS.h>
 #include <driver/gpio.h>
 #include <nvs_flash.h>
@@ -64,7 +63,8 @@ extern "C" void app_main() {
 		auto now = std::chrono::system_clock::now();
 		uint64_t now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 
-		ESP_LOGI(TAG, "Time: %" PRIu64 " sntp=%d %s", now_ms, sntp_get_sync_status(), Calendar{now}.to_string().c_str());
+		ESP_LOGI(TAG, "Time: %" PRIu64 "%s %s", now_ms,
+			Network::time_ok() ? "+" : "", Calendar{now}.to_string().c_str());
 		sleep(1);
 	}
 }
