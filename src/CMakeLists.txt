@@ -3,6 +3,7 @@ idf_component_register(
 		calendar.cpp
 		main.cpp
 		network.cpp
+		time_signal.cpp
 
 	REQUIRES
 		driver

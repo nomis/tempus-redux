@@ -20,6 +20,8 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
+#include <ctime>
 #include <string>
 
 namespace clockson {
@@ -30,20 +32,22 @@ public:
 	Calendar(std::chrono::system_clock::time_point tp);
 	~Calendar() = default;
 
-	uint16_t year() const { return year_; }
-	uint8_t month() const { return month_; }
-	uint8_t day() const { return day_; }
-	uint8_t weekday() const { return weekday_; } /* 0 = Sunday */
-	uint8_t hour() const { return hour_; }
-	uint8_t minute() const { return minute_; }
-	bool summer() const { return summer_; }
-	bool summer_change_soon() const { return summer_change_soon_; }
+	inline uint32_t utc_time() const { return utc_time_; }
+	inline uint16_t year() const { return year_; }
+	inline uint8_t month() const { return month_; }
+	inline uint8_t day() const { return day_; }
+	inline uint8_t weekday() const { return weekday_; } /* 0 = Sunday */
+	inline uint8_t hour() const { return hour_; }
+	inline uint8_t minute() const { return minute_; }
+	inline bool summer() const { return summer_; }
+	inline bool summer_change_soon() const { return summer_change_soon_; }
 
 	std::string to_string() const;
 
 private:
 	Calendar(time_t t, bool next);
 
+	uint32_t utc_time_ = 0;
 	uint16_t year_ = 0;
 	uint8_t month_ = 0;
 	uint8_t day_ = 0;

@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include <chrono>
+#include <cinttypes>
 
 #include "clockson/calendar.h"
 #include "clockson/network.h"

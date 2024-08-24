@@ -21,7 +21,9 @@
 #include <assert.h>
 
 #include <chrono>
+#include <cstdint>
 #include <cstdio>
+#include <ctime>
 #include <string>
 #include <vector>
 
@@ -80,8 +82,11 @@ Calendar::Calendar(time_t t, bool next) {
 		break;
 	}
 
+	utc_time_ = t;
+
 	if (summer_) {
-		t += 3600;
+		ts += 3600U;
+		t = ts;
 		assert(gmtime_r(&t, &tm) == &tm);
 	}
 
