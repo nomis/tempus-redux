@@ -43,7 +43,7 @@ extern "C" void app_main() {
 	ESP_ERROR_CHECK(err);
 
 	Network &network = *new Network{};
-	Transmit &transmit = *new Transmit{GPIO_NUM_1, true};
+	Transmit &transmit = *new Transmit{GPIO_NUM_1, ACTIVE_LOW};
 	UserInterface &ui = *new UserInterface{network, transmit};
 
 	TaskStatus_t status;

@@ -9,6 +9,12 @@ config CLOCKSON_WIFI_PASSWORD
 config CLOCKSON_DHCP_HOSTNAME
 	string "DHCP Hostname"
 
+config CLOCKSON_OUTPUT_ACTIVE_LOW
+	bool "Output is active low"
+	default y
+	help
+		Configure whether time signalling is active low or high
+
 config CLOCKSON_UI_LED_BRIGHTNESS
 	int "RGB LED brightness"
 	range 0 255

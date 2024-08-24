@@ -25,4 +25,9 @@ namespace clockson {
 
 static constexpr const char *TAG = "clockson";
 
+#ifndef CONFIG_CLOCKSON_OUTPUT_ACTIVE_LOW
+#define CONFIG_CLOCKSON_OUTPUT_ACTIVE_LOW 0
+#endif
+static constexpr const bool ACTIVE_LOW = CONFIG_CLOCKSON_OUTPUT_ACTIVE_LOW;
+
 } // namespace clockson
