@@ -34,16 +34,18 @@ using std::chrono::seconds;
 
 namespace clockson {
 
-TimeSignal::TimeSignal(time_t t) {
-	Calendar c{t};
+TimeSignal::TimeSignal() : time_(0) {
+}
+
+TimeSignal::TimeSignal(time_t t, uint64_t offset_us) : time_(t) {
 	data_t a, b;
 
-	set_bcd(a, 17, 24, c.year() % 100U);
-	set_bcd(a, 25, 29, c.month());
-	set_bcd(a, 30, 35, c.day());
-	set_bcd(a, 36, 38, c.weekday());
-	set_bcd(a, 39, 44, c.hour());
-	set_bcd(a, 45, 51, c.minute());
+	set_bcd(a, 17, 24, time_.year() % 100U);
+	set_bcd(a, 25, 29, time_.month());
+	set_bcd(a, 30, 35, time_.day());
+	set_bcd(a, 36, 38, time_.weekday());
+	set_bcd(a, 39, 44, time_.hour());
+	set_bcd(a, 45, 51, time_.minute());
 
 	/* Minute identifier */
 	a[53] = true;
@@ -53,15 +55,17 @@ TimeSignal::TimeSignal(time_t t) {
 	a[57] = true;
 	a[58] = true;
 
-	b[53] = c.summer_change_soon();
-	b[58] = c.summer();
+	b[53] = time_.summer_change_soon();
+	b[58] = time_.summer();
 
 	b[54] = odd_parity(a, 17, 24);
 	b[55] = odd_parity(a, 25, 35);
 	b[56] = odd_parity(a, 36, 38);
 	b[57] = odd_parity(a, 39, 51);
 
-	auto ts = duration_cast<microseconds>(seconds{c.utc_time()});
+	auto ts = duration_cast<microseconds>(seconds{time_.utc_time()});
+
+	ts -= microseconds{offset_us};
 
 	/* Transmit time one minute before */
 	ts -= minutes{1};

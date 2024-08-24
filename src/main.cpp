@@ -21,15 +21,10 @@
 #include <esp_err.h>
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
-#include <driver/gpio.h>
 #include <nvs_flash.h>
-#include <unistd.h>
 
-#include <chrono>
-#include <cinttypes>
-
-#include "clockson/calendar.h"
 #include "clockson/network.h"
+#include "clockson/transmit.h"
 
 using namespace clockson;
 
@@ -42,29 +37,10 @@ extern "C" void app_main() {
 	ESP_ERROR_CHECK(err);
 
 	new Network{};
-
-	gpio_num_t pin = GPIO_NUM_1;
-	gpio_config_t config{};
-
-	config.pin_bit_mask = 1ULL << pin,
-	config.mode = GPIO_MODE_INPUT;
-	config.pull_up_en = GPIO_PULLUP_DISABLE;
-	config.pull_down_en = GPIO_PULLDOWN_ENABLE;
-	config.intr_type = GPIO_INTR_DISABLE;
-
-	ESP_ERROR_CHECK(gpio_config(&config));
+	new Transmit{GPIO_NUM_1, true};
 
 	TaskStatus_t status;
 
 	vTaskGetInfo(nullptr, &status, pdTRUE, eRunning);
 	ESP_LOGI(TAG, "Free stack: %lu", status.usStackHighWaterMark);
-
-	while (true) {
-		auto now = std::chrono::system_clock::now();
-		uint64_t now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-
-		ESP_LOGI(TAG, "Time: %" PRIu64 "%s %s", now_ms,
-			Network::time_ok() ? "+" : "", Calendar{now}.to_string().c_str());
-		sleep(1);
-	}
 }

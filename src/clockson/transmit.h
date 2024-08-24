@@ -18,41 +18,36 @@
 
 #pragma once
 
-#include <bitset>
-#include <cstddef>
-#include <cstdint>
-#include <ctime>
-#include <deque>
+#include <esp_timer.h>
+#include <driver/gpio.h>
 
-#include "calendar.h"
+#include <cstddef>
+
+#include "time_signal.h"
 
 namespace clockson {
 
-struct Signal {
-	int64_t ts;
-	bool carrier;
-};
-
-class TimeSignal {
+class Transmit {
 public:
-	TimeSignal();
-	explicit TimeSignal(time_t t, uint64_t offset_us);
-	~TimeSignal() = default;
-
-	inline bool available() { return !values_.empty(); }
-	inline Signal next() { return values_.front(); }
-	inline void pop() { values_.pop_front(); }
-
-	inline const Calendar& time() const { return time_; }
+	Transmit(gpio_num_t pin, bool active_low);
+	~Transmit() = delete;
 
 private:
-	using data_t = std::bitset<60>;
+	static constexpr const char *TAG = "clockson.Transmit";
 
-	static void set_bcd(data_t &data, size_t begin, size_t end, unsigned int value);
-	static bool odd_parity(data_t &data, size_t begin, size_t end);
+	static void event(void *arg);
 
-	Calendar time_;
-	std::deque<Signal> values_;
+	inline int active() const { return active_low_ ? 0 : 1; }
+	inline int inactive() const { return active_low_ ? 1 : 0; }
+
+	void event();
+
+	const gpio_num_t pin_;
+	const bool active_low_;
+	esp_timer_handle_t timer_{nullptr};
+	uint64_t offset_us_{0};
+	uint32_t time_s_{0};
+	TimeSignal current_;
 };
 
 } // namespace clockson

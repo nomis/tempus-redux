@@ -40,6 +40,7 @@ public:
 	~Network() = delete;
 
 	static bool time_ok();
+	static bool time_ok(uint64_t *time_sync_us_out);
 
 private:
 	static constexpr const char *TAG = "clockson.Network";
@@ -48,7 +49,7 @@ private:
 		int32_t event_id, void *event_data);
 	friend void network::time_synced(struct timeval *tv);
 
-	static void time_synced();
+	static void time_synced(struct timeval *tv);
 
 	void event_handler(esp_event_base_t event_base, int32_t event_id,
 		void *event_data);

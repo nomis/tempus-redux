@@ -115,21 +115,31 @@ void Network::event_handler(esp_event_base_t event_base, int32_t event_id,
 namespace network {
 
 void time_synced(struct timeval *tv) {
-	Network::time_synced();
+	Network::time_synced(tv);
 }
 
 } // namespace network
 
-void Network::time_synced() {
+void Network::time_synced(struct timeval *tv) {
 	time_sync_us_ = esp_timer_get_time();
-	ESP_LOGI(TAG, "SNTP sync");
+	ESP_LOGI(TAG, "SNTP sync: %llu.%06lu", (unsigned long long)tv->tv_sec,
+		(unsigned long)tv->tv_usec);
 }
 
 bool Network::time_ok() {
-	uint64_t now = esp_timer_get_time();
+	return time_ok(nullptr);
+}
 
-	return time_sync_us_ > 0
-		&& (now - time_sync_us_ < std::chrono::microseconds(3h).count());
+bool Network::time_ok(uint64_t *time_sync_us_out) {
+	uint64_t now = esp_timer_get_time();
+	uint64_t time_sync_us = time_sync_us_;
+
+	if (time_sync_us_out) {
+		*time_sync_us_out = time_sync_us;
+	}
+
+	return time_sync_us > 0
+		&& (now - time_sync_us < std::chrono::microseconds(3h).count());
 }
 
 } // namespace clockson
