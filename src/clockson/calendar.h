@@ -28,8 +28,8 @@ namespace clockson {
 
 class Calendar {
 public:
-	Calendar(time_t t);
-	Calendar(std::chrono::system_clock::time_point tp);
+	explicit Calendar(time_t t);
+	explicit Calendar(std::chrono::system_clock::time_point tp);
 	~Calendar() = default;
 
 	inline uint32_t utc_time() const { return utc_time_; }

@@ -104,7 +104,7 @@ std::string Calendar::to_string() const {
 	std::snprintf(text.data(), text.size(),
 		"%04u-%02u-%02uT%02u:%02u+0%u:00%s",
 		year_, month_, day_, hour_, minute_,
-		summer_ ? 1 : 0,
+		summer_ ? 1U : 0U,
 		summer_change_soon_ ? "#" : "");
 
 	return {text.data(), text.size()};

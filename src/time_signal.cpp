@@ -119,7 +119,7 @@ inline void TimeSignal::set_bcd(data_t &data, size_t begin, size_t end,
 	}
 }
 
-inline bool TimeSignal::odd_parity(data_t &data, size_t begin, size_t end) {
+inline bool TimeSignal::odd_parity(const data_t &data, size_t begin, size_t end) {
 	bool parity = true;
 
 	for (size_t i = begin; i <= end; i++) {

@@ -49,7 +49,7 @@ private:
 	using data_t = std::bitset<60>;
 
 	static void set_bcd(data_t &data, size_t begin, size_t end, unsigned int value);
-	static bool odd_parity(data_t &data, size_t begin, size_t end);
+	static bool odd_parity(const data_t &data, size_t begin, size_t end);
 
 	Calendar time_;
 	std::deque<Signal> values_;
