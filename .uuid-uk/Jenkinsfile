@@ -1,0 +1,5 @@
+@Library("uuid") _
+
+espressifApplicationPipeline{
+	idf_targets = ["esp32s3"]
+}
