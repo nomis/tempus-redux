@@ -93,6 +93,12 @@ void Transmit::event() {
 
 			uint64_t offset_us = now_us - uptime_us;
 
+			/*
+			 * Generate time signal for the next minute (as required by the
+			 * protocol), looking ahead 1 second further because preparation for
+			 * the next transmission happens up to 900ms before the current
+			 * minute finishes.
+			 */
 			now_s++;
 			now_s /= 60U;
 			now_s++;

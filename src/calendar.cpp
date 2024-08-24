@@ -87,6 +87,7 @@ Calendar::Calendar(time_t t, bool next) {
 	if (summer_) {
 		ts += 3600U;
 		t = ts;
+
 		assert(gmtime_r(&t, &tm) == &tm);
 	}
 
