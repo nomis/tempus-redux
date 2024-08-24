@@ -5,6 +5,7 @@ idf_component_register(
 		network.cpp
 		time_signal.cpp
 		transmit.cpp
+		ui.cpp
 
 	REQUIRES
 		driver

@@ -9,4 +9,11 @@ config CLOCKSON_WIFI_PASSWORD
 config CLOCKSON_DHCP_HOSTNAME
 	string "DHCP Hostname"
 
+config CLOCKSON_UI_LED_BRIGHTNESS
+	int "RGB LED brightness"
+	range 0 255
+	default 8
+	help
+		Configure LED brightness.
+
 endmenu

@@ -21,6 +21,7 @@
 #include <esp_timer.h>
 #include <driver/gpio.h>
 
+#include <atomic>
 #include <cstddef>
 
 #include "time_signal.h"
@@ -31,6 +32,8 @@ class Transmit {
 public:
 	Transmit(gpio_num_t pin, bool active_low);
 	~Transmit() = delete;
+
+	inline uint64_t last_us() const { return last_us_; }
 
 private:
 	static constexpr const char *TAG = "clockson.Transmit";
@@ -48,6 +51,7 @@ private:
 	uint64_t offset_us_{0};
 	uint32_t time_s_{0};
 	TimeSignal current_;
+	std::atomic<uint64_t> last_us_{0};
 };
 
 } // namespace clockson

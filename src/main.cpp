@@ -20,11 +20,17 @@
 
 #include <esp_err.h>
 #include <esp_log.h>
+#include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
+#include <led_strip.h>
 #include <nvs_flash.h>
+#include <unistd.h>
+
+#include <chrono>
 
 #include "clockson/network.h"
 #include "clockson/transmit.h"
+#include "clockson/ui.h"
 
 using namespace clockson;
 
@@ -36,11 +42,14 @@ extern "C" void app_main() {
 	}
 	ESP_ERROR_CHECK(err);
 
-	new Network{};
-	new Transmit{GPIO_NUM_1, true};
+	Network &network = *new Network{};
+	Transmit &transmit = *new Transmit{GPIO_NUM_1, true};
+	UserInterface &ui = *new UserInterface{network, transmit};
 
 	TaskStatus_t status;
 
 	vTaskGetInfo(nullptr, &status, pdTRUE, eRunning);
 	ESP_LOGI(TAG, "Free stack: %lu", status.usStackHighWaterMark);
+
+	ui.main_loop();
 }
