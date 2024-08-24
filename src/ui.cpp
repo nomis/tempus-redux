@@ -63,7 +63,7 @@ void UserInterface::main_loop() {
 		} else if (now_us - last_sync_us > 2 * duration_cast<microseconds>(milliseconds(CONFIG_LWIP_SNTP_UPDATE_DELAY)).count()) {
 			set_led(colour::BLUE);
 		} else {
-			set_led(colour::WHITE);
+			set_led(colour::GREEN);
 		}
 
 		sleep(1);

@@ -42,7 +42,7 @@ LED Status
    * - Colour
      - Time in sync
      - Transmitting
-   * - White
+   * - Green
      - Yes
      - Yes
    * - Blue
