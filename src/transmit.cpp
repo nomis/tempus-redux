@@ -69,6 +69,7 @@ void Transmit::event() {
 
 		if (!current_.available()) {
 			uint64_t last_sync_us{0};
+
 			if (!Network::time_ok(&last_sync_us)) {
 				if (last_sync_us) {
 					ESP_LOGW(TAG, "Waiting for time sync (last sync %" PRIu64 "us ago)",
@@ -106,9 +107,9 @@ void Transmit::event() {
 
 			if (time_s_ == now_s) {
 				/*
-				* If the clock has gone backwards slightly, don't try to repeat the
-				* same time signal twice.
-				*/
+				 * If the clock has gone backwards slightly, don't try to repeat the
+				 * same time signal twice.
+				 */
 
 				uint64_t remaining_us = (now_us / microseconds(1min).count() + 1) * microseconds(1min).count()
 					- microseconds(700ms).count() - offset_us - uptime_us;
@@ -123,6 +124,10 @@ void Transmit::event() {
 
 			ESP_LOGI(TAG, "%s (offset %" PRIu64 "us)", current_.time().to_string().c_str(), offset_us);
 
+			/*
+			 * Skip everything that would have happened in the past if we start
+			 * in the middle of a minute.
+			 */
 			while (current_.available() && current_.next().ts < uptime_us) {
 				current_.pop();
 			}

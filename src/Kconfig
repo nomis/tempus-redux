@@ -13,7 +13,7 @@ config CLOCKSON_OUTPUT_ACTIVE_LOW
 	bool "Output is active low"
 	default y
 	help
-		Configure whether time signalling is active low or high
+		Configure whether time signalling carrier is active low or high
 
 config CLOCKSON_UI_LED_BRIGHTNESS
 	int "RGB LED brightness"
