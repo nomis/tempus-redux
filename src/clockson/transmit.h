@@ -28,9 +28,11 @@
 
 namespace clockson {
 
+class Network;
+
 class Transmit {
 public:
-	Transmit(gpio_num_t pin, bool active_low);
+	Transmit(Network &network, gpio_num_t pin, bool active_low);
 	~Transmit() = delete;
 
 	inline uint64_t last_us() const { return last_us_; }
@@ -45,6 +47,7 @@ private:
 
 	void event();
 
+	Network &network_;
 	const gpio_num_t pin_;
 	const bool active_low_;
 	esp_timer_handle_t timer_{nullptr};

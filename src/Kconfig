@@ -9,6 +9,9 @@ config CLOCKSON_WIFI_PASSWORD
 config CLOCKSON_DHCP_HOSTNAME
 	string "DHCP Hostname"
 
+config CLOCKSON_SYSLOG_IP_ADDRESS
+	string "Syslog IP Address"
+
 config CLOCKSON_OUTPUT_ACTIVE_LOW
 	bool "Output is active low"
 	default y

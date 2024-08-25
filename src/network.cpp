@@ -24,11 +24,16 @@
 #include <esp_sntp.h>
 #include <esp_timer.h>
 #include <esp_wifi.h>
+#include <netdb.h>
 #include <sys/time.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <chrono>
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -40,8 +45,44 @@ Network::Network() {
 	ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
 
+
 	esp_netif_t *netif = esp_netif_create_default_wifi_sta();
 	ESP_ERROR_CHECK(esp_netif_set_hostname(netif, CONFIG_CLOCKSON_DHCP_HOSTNAME));
+
+
+	struct addrinfo hints{};
+
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV;
+	hints.ai_protocol = IPPROTO_UDP;
+
+	if (CONFIG_CLOCKSON_SYSLOG_IP_ADDRESS[0]) {
+		struct addrinfo *res;
+
+		int gai_ret = ::getaddrinfo(CONFIG_CLOCKSON_SYSLOG_IP_ADDRESS, "514", &hints, &res);
+
+		if (gai_ret) {
+			ESP_LOGE(TAG, "syslog getaddrinfo(): %d", gai_ret);
+		} else {
+			syslog_ = ::socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+			if (syslog_ == -1) {
+				ESP_LOGE(TAG, "syslog socket(): %d", syslog_);
+			} else {
+				int ret = ::connect(syslog_, res->ai_addr, res->ai_addrlen);
+
+				if (ret) {
+					ESP_LOGE(TAG, "syslog connect(): %d", ret);
+					::close(syslog_);
+					syslog_ = -1;
+				}
+			}
+
+			::freeaddrinfo(res);
+		}
+	}
+
 
 	wifi_init_config_t init_cfg = WIFI_INIT_CONFIG_DEFAULT();
 
@@ -50,6 +91,7 @@ Network::Network() {
 	ESP_ERROR_CHECK(esp_wifi_init(&init_cfg));
 	ESP_ERROR_CHECK(esp_wifi_set_country_code("GB", true));
 
+
 	esp_sntp_config_t sntp_cfg{};
 
 	sntp_cfg.server_from_dhcp = true;
@@ -57,6 +99,7 @@ Network::Network() {
 	sntp_cfg.sync_cb = &network::time_synced;
 
 	ESP_ERROR_CHECK(esp_netif_sntp_init(&sntp_cfg));
+
 
 	wifi_config_t wifi_cfg{};
 
@@ -145,6 +188,39 @@ bool Network::time_ok(uint64_t *time_sync_us_out) {
 
 	return time_sync_us > 0
 		&& (now - time_sync_us < (uint64_t)std::chrono::microseconds(3h).count());
+}
+
+void Network::syslog(std::string_view message) {
+	if (syslog_ == -1) {
+		return;
+	}
+
+	std::vector<char> buffer(64 + message.length());
+
+	uint64_t timestamp_ms = esp_timer_get_time() / 1000U;
+	unsigned long days;
+	unsigned int hours, minutes, seconds, milliseconds;
+
+	days = timestamp_ms / 86400000UL;
+	timestamp_ms %= 86400000UL;
+
+	hours = timestamp_ms / 3600000UL;
+	timestamp_ms %= 3600000UL;
+
+	minutes = timestamp_ms / 60000UL;
+	timestamp_ms %= 60000UL;
+
+	seconds = timestamp_ms / 1000UL;
+	timestamp_ms %= 1000UL;
+
+	milliseconds = timestamp_ms;
+
+	std::snprintf(buffer.data(), buffer.size(),
+		"<14>1 - - - - - - \xEF\xBB\xBF%03lu+%02u:%02u:%02u.%03u %*s",
+			days, hours, minutes, seconds, milliseconds,
+			message.length(), message.data());
+
+	::send(syslog_, buffer.data(), std::strlen(buffer.data()), 0);
 }
 
 } // namespace clockson

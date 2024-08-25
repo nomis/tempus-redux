@@ -25,6 +25,8 @@
 #include <sdkconfig.h>
 #include <sys/time.h>
 
+#include <string>
+
 namespace clockson {
 
 namespace network {
@@ -44,6 +46,8 @@ public:
 	static bool time_ok();
 	static bool time_ok(uint64_t *time_sync_us_out);
 
+	void syslog(std::string_view message);
+
 private:
 	static constexpr const char *TAG = "clockson.Network";
 
@@ -57,6 +61,8 @@ private:
 		void *event_data);
 
 	static uint64_t time_sync_us_;
+
+	int syslog_{-1};
 };
 
 } // namespace clockson

@@ -23,6 +23,8 @@
 #include <driver/gpio.h>
 
 #include <chrono>
+#include <cstdio>
+#include <vector>
 
 #include "clockson/network.h"
 #include "clockson/time_signal.h"
@@ -34,8 +36,8 @@ using namespace std::chrono_literals;
 
 namespace clockson {
 
-Transmit::Transmit(gpio_num_t pin, bool active_low) : pin_(pin),
-		active_low_(active_low) {
+Transmit::Transmit(Network &network, gpio_num_t pin, bool active_low)
+		: network_(network), pin_(pin), active_low_(active_low) {
 	esp_timer_create_args_t timer_config{};
 	timer_config.callback = event;
 	timer_config.arg = this;
@@ -122,7 +124,12 @@ void Transmit::event() {
 			current_ = TimeSignal{now_s, offset_us};
 			time_s_ = now_s;
 
-			ESP_LOGI(TAG, "%s (offset %" PRIu64 "us)", current_.time().to_string().c_str(), offset_us);
+			std::vector<char> message(64);
+
+			std::snprintf(message.data(), message.size(), "%s (offset %" PRIu64 "us)",
+				current_.time().to_string().c_str(), offset_us);
+			ESP_LOGI(TAG, "%s", message.data());
+			network_.syslog(message.data());
 
 			/*
 			 * Skip everything that would have happened in the past if we start
