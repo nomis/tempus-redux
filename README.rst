@@ -35,6 +35,8 @@ network.
 LED Status
 ~~~~~~~~~~
 
+The current status is displayed on a LED connected to GPIO38.
+
 .. list-table::
    :widths: 30 40 30
    :header-rows: 1
