@@ -149,6 +149,17 @@ void Transmit::event() {
 				current_.pop();
 			}
 
+			/*
+			 * If the transmission times somehow overflow uint64_t, avoid going
+			 * into a fast infinite loop.
+			 */
+			if (!current_.available()) {
+				ESP_LOGW(TAG, "Nothing left to transmit");
+				ESP_ERROR_CHECK(gpio_set_level(pin_, active()));
+				ESP_ERROR_CHECK(esp_timer_start_once(timer_, microseconds(1s).count()));
+				return;
+			}
+
 			continue;
 		}
 
