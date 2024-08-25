@@ -30,7 +30,9 @@
 #include "clockson/time_signal.h"
 
 using std::chrono::duration_cast;
+using std::chrono::time_point_cast;
 using std::chrono::microseconds;
+using std::chrono::seconds;
 using std::chrono::system_clock;
 using namespace std::chrono_literals;
 
@@ -67,9 +69,14 @@ void Transmit::event(void *arg) {
 void Transmit::event() {
 	while (true) {
 		uint64_t uptime_us = esp_timer_get_time();
-		auto now = system_clock::now();
 
 		if (!current_.available()) {
+			/*
+			 * Convert this to microseconds before applying a test offset
+			 * because the default precision of nanoseconds doesn't support
+			 * times beyond ~2554 in a uint64_t value.
+			 */
+			auto now = time_point_cast<microseconds>(system_clock::now()).time_since_epoch();
 			uint64_t last_sync_us{0};
 
 			if (!Network::time_ok(&last_sync_us)) {
@@ -84,8 +91,19 @@ void Transmit::event() {
 				return;
 			}
 
-			uint64_t now_us = duration_cast<microseconds>(now.time_since_epoch()).count();
-			uint64_t now_s = system_clock::to_time_t(now);
+#ifdef CONFIG_CLOCKSON_TEST_TIME_S
+# define CLOCKSON_CONCAT_(x,y) x##y
+# define CLOCKSON_CONCAT(x,y) CLOCKSON_CONCAT_(x,y)
+# define CLOCKSON_TEST_TIME_US (uint64_t)(CLOCKSON_CONCAT(CONFIG_CLOCKSON_TEST_TIME_S, 000000ULL))
+			static auto test_offset = microseconds{CLOCKSON_TEST_TIME_US} - now;
+			now += test_offset;
+# undef CLOCKSON_TEST_TIME_US
+# undef CLOCKSON_CONCAT
+# undef CLOCKSON_CONCAT_
+#endif
+
+			uint64_t now_us = now.count();
+			uint64_t now_s = duration_cast<seconds>(now).count();
 
 			if (now_us < uptime_us) {
 				ESP_LOGE(TAG, "Invalid: now_us=%" PRIu64 " < uptime_us=%" PRIu64, now_us, uptime_us);
