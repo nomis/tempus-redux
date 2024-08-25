@@ -48,6 +48,7 @@ Network::Network() {
 	init_cfg.nvs_enable = false;
 
 	ESP_ERROR_CHECK(esp_wifi_init(&init_cfg));
+	ESP_ERROR_CHECK(esp_wifi_set_country_code("GB", true));
 
 	esp_sntp_config_t sntp_cfg{};
 
@@ -64,7 +65,7 @@ Network::Network() {
 		CONFIG_CLOCKSON_WIFI_SSID, sizeof(wifi_cfg.sta.ssid));
 	std::snprintf(reinterpret_cast<char*>(&wifi_cfg.sta.password),
 		sizeof(wifi_cfg.sta.password), "%s", CONFIG_CLOCKSON_WIFI_PASSWORD);
-	wifi_cfg.sta.threshold.authmode = WIFI_AUTH_WPA2_WPA3_PSK;
+	wifi_cfg.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
 	wifi_cfg.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
 	std::snprintf(reinterpret_cast<char*>(&wifi_cfg.sta.sae_h2e_identifier),
 		sizeof(wifi_cfg.sta.sae_h2e_identifier), "%s", CONFIG_CLOCKSON_WIFI_PASSWORD);
@@ -103,10 +104,14 @@ void Network::event_handler(esp_event_base_t event_base, int32_t event_id,
 		ESP_LOGI(TAG, "WiFi start");
 		ESP_ERROR_CHECK(esp_wifi_connect());
 	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-		ESP_LOGI(TAG, "WiFi disconnected");
+		wifi_event_sta_disconnected_t *data = reinterpret_cast<wifi_event_sta_disconnected_t*>(event_data);
+		ESP_LOGI(TAG, "WiFi disconnected: %02x:%02x:%02x:%02x:%02x:%02x %u",
+			data->bssid[0], data->bssid[1], data->bssid[2],
+			data->bssid[3], data->bssid[4], data->bssid[5],
+			data->reason);
 		ESP_ERROR_CHECK(esp_wifi_connect());
 	} else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-		ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+		ip_event_got_ip_t* event = reinterpret_cast<ip_event_got_ip_t*>(event_data);
 		ESP_LOGI(TAG, "WiFi IPv4 address: " IPSTR, IP2STR(&event->ip_info.ip));
 		sntp_restart();
 	}
