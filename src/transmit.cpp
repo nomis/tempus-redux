@@ -113,8 +113,18 @@ void Transmit::event() {
 				 * same time signal twice.
 				 */
 
-				uint64_t remaining_us = (now_us / microseconds(1min).count() + 1) * microseconds(1min).count()
-					- microseconds(700ms).count() - offset_us - uptime_us;
+				uint64_t next_minute_us = (now_us / (uint64_t)microseconds(1min).count() + 1U)
+					* (uint64_t)microseconds(1min).count()
+					- (uint64_t)microseconds(700ms).count();
+
+				if (next_minute_us < now_us) {
+					ESP_LOGE(TAG, "Invalid: next_minute_us=%" PRIu64 " < now_us=%" PRIu64, next_minute_us, now_us);
+					ESP_ERROR_CHECK(gpio_set_level(pin_, active()));
+					ESP_ERROR_CHECK(esp_timer_start_once(timer_, microseconds(1s).count()));
+					return;
+				}
+
+				uint64_t remaining_us = next_minute_us - offset_us - uptime_us;
 
 				ESP_ERROR_CHECK(gpio_set_level(pin_, active()));
 				ESP_ERROR_CHECK(esp_timer_start_once(timer_, remaining_us));
