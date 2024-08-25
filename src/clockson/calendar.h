@@ -32,7 +32,7 @@ public:
 	explicit Calendar(std::chrono::system_clock::time_point tp);
 	~Calendar() = default;
 
-	inline uint32_t utc_time() const { return utc_time_; }
+	inline uint64_t utc_time() const { return utc_time_; }
 	inline uint16_t year() const { return year_; }
 	inline uint8_t month() const { return month_; }
 	inline uint8_t day() const { return day_; }
@@ -47,7 +47,7 @@ public:
 private:
 	Calendar(time_t t, bool next);
 
-	uint32_t utc_time_{0};
+	uint64_t utc_time_{0};
 	uint16_t year_{0};
 	uint8_t month_{0};
 	uint8_t day_{0};

@@ -85,7 +85,7 @@ void Transmit::event() {
 			}
 
 			uint64_t now_us = duration_cast<microseconds>(now.time_since_epoch()).count();
-			uint32_t now_s = system_clock::to_time_t(now);
+			uint64_t now_s = system_clock::to_time_t(now);
 
 			if (now_us < uptime_us) {
 				ESP_LOGE(TAG, "Invalid: now_us=%" PRIu64 " < uptime_us=%" PRIu64, now_us, uptime_us);
@@ -107,7 +107,7 @@ void Transmit::event() {
 			now_s++;
 			now_s *= 60U;
 
-			if (time_s_ == now_s) {
+			if (last_signal_s_ == now_s) {
 				/*
 				 * If the clock has gone backwards slightly, don't try to repeat the
 				 * same time signal twice.
@@ -131,8 +131,8 @@ void Transmit::event() {
 				return;
 			}
 
-			current_ = TimeSignal{now_s, offset_us};
-			time_s_ = now_s;
+			current_ = TimeSignal{(time_t)now_s, offset_us};
+			last_signal_s_ = now_s;
 
 			std::vector<char> message(64);
 

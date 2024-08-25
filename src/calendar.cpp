@@ -39,7 +39,7 @@ Calendar::Calendar(std::chrono::system_clock::time_point tp)
 
 Calendar::Calendar(time_t t, bool next) {
 	struct tm tm{};
-	uint32_t ts = t;
+	uint64_t ts = t;
 
 	ts /= 60U; /* current minute */
 	if (next) {

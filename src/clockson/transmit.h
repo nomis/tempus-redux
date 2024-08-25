@@ -52,7 +52,7 @@ private:
 	const bool active_low_;
 	esp_timer_handle_t timer_{nullptr};
 	uint64_t offset_us_{0};
-	uint32_t time_s_{0};
+	uint64_t last_signal_s_{0};
 	TimeSignal current_;
 	std::atomic<uint64_t> last_us_{0};
 };
