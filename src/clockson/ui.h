@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "freertos.h"
+
 #include <cstddef>
 
 #include <led_strip.h>

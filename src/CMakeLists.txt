@@ -23,4 +23,5 @@ target_compile_options(
 		-Wextra
 		-Wshadow
 		-Werror
+		-Wsign-compare
 )

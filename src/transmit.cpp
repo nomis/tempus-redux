@@ -128,7 +128,7 @@ void Transmit::event() {
 			 * Skip everything that would have happened in the past if we start
 			 * in the middle of a minute.
 			 */
-			while (current_.available() && current_.next().ts < uptime_us) {
+			while (current_.available() && current_.next().unsigned_ts() < uptime_us) {
 				current_.pop();
 			}
 
@@ -136,7 +136,7 @@ void Transmit::event() {
 		}
 
 		auto signal = current_.next();
-		uint64_t signal_us = signal.ts < 0 ? 0 : signal.ts;
+		uint64_t signal_us = signal.unsigned_ts();
 
 		if (uptime_us < signal_us) {
 			ESP_ERROR_CHECK(esp_timer_start_once(timer_, signal_us - uptime_us));

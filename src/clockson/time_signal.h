@@ -31,6 +31,8 @@ namespace clockson {
 struct Signal {
 	int64_t ts;
 	bool carrier;
+
+	inline uint64_t unsigned_ts() const { return ts < 0 ? 0 : ts; }
 };
 
 class TimeSignal {

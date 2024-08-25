@@ -139,7 +139,7 @@ bool Network::time_ok(uint64_t *time_sync_us_out) {
 	}
 
 	return time_sync_us > 0
-		&& (now - time_sync_us < std::chrono::microseconds(3h).count());
+		&& (now - time_sync_us < (uint64_t)std::chrono::microseconds(3h).count());
 }
 
 } // namespace clockson

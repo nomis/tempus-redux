@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "freertos.h"
+
 #include <cstddef>
 #include <esp_wifi.h>
 #include <sdkconfig.h>
