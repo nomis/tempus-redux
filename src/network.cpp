@@ -94,6 +94,7 @@ Network::Network() {
 
 	esp_sntp_config_t sntp_cfg{};
 
+	sntp_cfg.smooth_sync = true;
 	sntp_cfg.server_from_dhcp = true;
 	sntp_cfg.start = true;
 	sntp_cfg.sync_cb = &network::time_synced;
