@@ -10,6 +10,9 @@ idf_build_get_property(elf_name EXECUTABLE_NAME GENERATOR_EXPRESSION)
 set(app_bin "${build_dir}/${elf_name}.bin")
 set(app_elf "${build_dir}/${elf_name}.elf")
 
+idf_build_set_property(COMPILE_OPTIONS "-DSNTP_CHECK_RESPONSE=2" APPEND)
+idf_build_set_property(COMPILE_OPTIONS "-DSNTP_COMP_ROUNDTRIP=1" APPEND)
+
 execute_process(
 	WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
 	OUTPUT_STRIP_TRAILING_WHITESPACE
