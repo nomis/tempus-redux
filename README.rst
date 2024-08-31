@@ -50,7 +50,7 @@ The current status is displayed on a LED connected to GPIO38.
    * - Blue
      - No (2+ minutes)
      - Yes
-   * - Yellow
+   * - Orange
      - No (3+ hours)
      - No
    * - Red

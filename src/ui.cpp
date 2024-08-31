@@ -57,7 +57,7 @@ void UserInterface::main_loop() {
 		uint64_t last_sync_us{0};
 
 		if (!network_.time_ok(&last_sync_us)) {
-			set_led(colour::YELLOW);
+			set_led(colour::ORANGE);
 		} else if (now_us - transmit_.last_us() > (uint64_t)microseconds(1s).count()) {
 			set_led(colour::RED);
 		} else if (now_us - last_sync_us > 2 * duration_cast<microseconds>(milliseconds(CONFIG_LWIP_SNTP_UPDATE_DELAY)).count()) {
