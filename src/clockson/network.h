@@ -25,7 +25,11 @@
 #include <sdkconfig.h>
 #include <sys/time.h>
 
+#include <atomic>
 #include <string>
+
+extern "C" int __wrap_adjtime(const struct timeval *delta,
+	struct timeval *outdelta);
 
 namespace clockson {
 
@@ -45,22 +49,42 @@ public:
 
 	static bool time_ok();
 	static bool time_ok(uint64_t *time_sync_us_out);
+	static void time_slew_next();
 
 	void syslog(std::string_view message);
 
 private:
 	static constexpr const char *TAG = "clockson.Network";
+	/*
+	 * Maximum smooth time adjustment is 750ms, which will take 30 minutes when
+	 * adjusting by 25ms every minute
+	 */
+	static constexpr suseconds_t UPPER_TIME_STEP_US = 750000;
+	static constexpr suseconds_t LOWER_TIME_STEP_US = -UPPER_TIME_STEP_US;
+	/*
+	 * Maximum smooth time adjustment per transmission, to avoid tearing the
+	 * signal or going beyond receiver timing tolerances
+	 */
+	static constexpr suseconds_t UPPER_TIME_SLEW_US = 25000;
+	static constexpr suseconds_t LOWER_TIME_SLEW_US = -UPPER_TIME_SLEW_US;
+	static constexpr suseconds_t ONE_SECOND_US = 1000000;
 
 	friend void network::event_handler(void *arg, esp_event_base_t event_base,
 		int32_t event_id, void *event_data);
 	friend void network::time_synced(struct timeval *tv);
+	friend int ::__wrap_adjtime(const struct timeval *delta,
+		struct timeval *outdelta);
 
 	static void time_synced(struct timeval *tv);
+	static int adjtime(const struct timeval *delta, struct timeval *outdelta);
 
 	void event_handler(esp_event_base_t event_base, int32_t event_id,
 		void *event_data);
 
 	static uint64_t time_sync_us_;
+	static bool time_step_first_;
+	static std::atomic<int> time_slew_allowed_;
+	static int time_slew_current_;
 
 	int syslog_{-1};
 };

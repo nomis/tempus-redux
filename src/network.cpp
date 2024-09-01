@@ -30,16 +30,22 @@
 #include <sys/types.h>
 
 #include <algorithm>
+#include <atomic>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <chrono>
 #include <vector>
 
 using namespace std::chrono_literals;
+using std::chrono::microseconds;
 
 namespace clockson {
 
 uint64_t Network::time_sync_us_{0};
+bool Network::time_step_first_{true};
+std::atomic<int> Network::time_slew_allowed_{0};
+int Network::time_slew_current_{0};
 
 Network::Network() {
 	ESP_ERROR_CHECK(esp_netif_init());
@@ -188,7 +194,75 @@ bool Network::time_ok(uint64_t *time_sync_us_out) {
 	}
 
 	return time_sync_us > 0
-		&& (now - time_sync_us < (uint64_t)std::chrono::microseconds(3h).count());
+		&& (now - time_sync_us < (uint64_t)microseconds(3h).count());
+}
+
+void Network::time_slew_next() {
+	time_slew_allowed_++;
+}
+
+int Network::adjtime(const struct timeval *delta, struct timeval *outdelta) {
+	if (delta != nullptr) {
+		bool allowed = false;
+		bool applied = false;
+		int time_slew_copy = time_slew_allowed_;
+
+		if (time_slew_copy != time_slew_current_) {
+			time_slew_current_ = time_slew_copy;
+			allowed = true;
+		}
+
+		if (delta->tv_sec != 0 || delta->tv_usec < LOWER_TIME_STEP_US
+				|| delta->tv_usec >= UPPER_TIME_STEP_US || time_step_first_) {
+			/* Outside permitted adjustment range */
+			time_step_first_ = false;
+			errno = EINVAL;
+			return -1;
+		} else if (delta->tv_usec != 0 && allowed) {
+			struct timeval now{};
+
+			if (::gettimeofday(&now, nullptr)) {
+				return -1;
+			}
+
+			/*
+			 * Limit maximum slew amount per transmission, which relies on the
+			 * next time sync to continue the adjustment
+			 */
+			if (delta->tv_usec < 0) {
+				now.tv_usec += std::max(delta->tv_usec, LOWER_TIME_SLEW_US);
+
+				if (now.tv_usec < 0) {
+					now.tv_sec--;
+					now.tv_usec += ONE_SECOND_US;
+				}
+			} else if (delta->tv_usec > 0) {
+				now.tv_usec += std::min(delta->tv_usec, UPPER_TIME_SLEW_US);
+
+				if (now.tv_usec >= ONE_SECOND_US) {
+					now.tv_sec++;
+					now.tv_usec -= ONE_SECOND_US;
+				}
+			}
+
+			if (::settimeofday(&now, nullptr)) {
+				return -1;
+			}
+
+			applied = true;
+		}
+
+		ESP_LOGI(TAG, "SNTP adjtime: tv_sec=%lld tv_usec=%ld (%s)",
+			(unsigned long long)delta->tv_sec, (unsigned long)delta->tv_usec,
+			applied ? "applied" : "skipped");
+	}
+
+	if (outdelta) {
+		outdelta->tv_sec = 0;
+		outdelta->tv_usec = 0;
+	}
+
+	return 0;
 }
 
 void Network::syslog(std::string_view message) {
@@ -225,3 +299,10 @@ void Network::syslog(std::string_view message) {
 }
 
 } // namespace clockson
+
+extern "C" int __real_adjtime();
+
+extern "C" int __wrap_adjtime(const struct timeval *delta,
+		struct timeval *outdelta) {
+	return clockson::Network::adjtime(delta, outdelta);
+}

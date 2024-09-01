@@ -25,3 +25,10 @@ target_compile_options(
 		-Werror
 		-Wsign-compare
 )
+
+target_link_libraries(
+	${COMPONENT_LIB}
+	INTERFACE
+	-Wl,--undefined=__wrap_adjtime
+	-Wl,--wrap=adjtime
+)
