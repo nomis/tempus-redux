@@ -63,8 +63,8 @@ Radio Clock
 An attached Youshiko YC8091 radio clock can be powered automatically when a time
 signal is ready and reconfigured to set the time format to 24 hours on startup.
 
-Connect the radio clock to the ESP32 using the `KiCad schematic
-<circuits/youshiko-yc8091-xxl-radio-controlled-wall-clock.kicad_sch>`_:
+Remove the MSF antenna circuit and connect the radio clock to the ESP32 using
+the `KiCad schematic <circuits/youshiko-yc8091-xxl-radio-controlled-wall-clock.kicad_sch>`_:
 
 .. image:: circuits/youshiko-yc8091-xxl-radio-controlled-wall-clock-sch.svg
    :alt: Schematic to connect to a Youshiko YC8091 radio clock
@@ -73,7 +73,7 @@ Connect the radio clock to the ESP32 using the `KiCad schematic
    :alt: Example of connection to a Youshiko YC8091 radio clock
 
 Disconnect the buzzer if your MOSFET isn't capable of handling the current draw
-when it beeps.
+when it beeps. The circuit for the other push buttons hasn't been identified.
 
 Build
 -----
