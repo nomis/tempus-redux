@@ -91,6 +91,7 @@ void RadioClock::power_on() {
 		ESP_ERROR_CHECK(gpio_set_level(power_pin_, 0));
 
 		state_ = State::POWER_ON_WAIT;
+		ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, POWER_ON_WAIT_US));
 	}
 }
 
@@ -143,7 +144,7 @@ void RadioClock::control_event() {
 	switch (state_) {
 	case State::POWER_OFF:
 	case State::POWER_ON_WAIT:
-		state_ = State::POWER_ON_WAIT;
+		state_ = State::POWER_ON;
 		enable_interrupt_handler();
 		ESP_ERROR_CHECK(gpio_isr_handler_add(enable_pin_, enable_interrupt_handler, this));
 		ESP_ERROR_CHECK(gpio_intr_enable(enable_pin_));
