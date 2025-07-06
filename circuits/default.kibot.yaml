@@ -1,0 +1,12 @@
+kibot:
+  version: 1
+
+global:
+  dir: build
+
+outputs:
+- name: schematic
+  type: svg_sch_print
+  run_by_default: true
+  options:
+    frame: false
