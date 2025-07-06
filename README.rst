@@ -57,6 +57,18 @@ The current status is displayed on a LED connected to GPIO38.
      - Yes
      - No
 
+Radio Clock
+~~~~~~~~~~~
+
+An attached Youshiko YC8091 radio clock can be powered automatically when a time
+signal is ready and reconfigured to set the time format to 24 hours on startup.
+
+Connect the radio clock to the ESP32 using the `KiCad schematic
+<circuits/youshiko-yc8091-xxl-radio-controlled-wall-clock.kicad_sch>`_:
+
+.. image:: circuits/youshiko-yc8091-xxl-radio-controlled-wall-clock-sch.svg
+   :alt: Schematic to connect to a Youshiko YC8091 radio clock
+
 Build
 -----
 
@@ -69,7 +81,8 @@ Configure::
     idf.py menuconfig
 
 Under "Component config" you'll find "Tempus Redux" where you can configure the
-WiFi network and whether the output is active low or not.
+WiFi network and whether the output is active low or not. Support for managing
+the radio clock can also be enabled here.
 
 Build::
 
