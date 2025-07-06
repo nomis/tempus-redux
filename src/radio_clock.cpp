@@ -170,7 +170,7 @@ void RadioClock::control_event() {
 		break;
 
 	case State::PRESS_TOGGLE_12H_24H:
-		release_button(toggle_radio_control_pin_);
+		release_button(toggle_12h_24h_pin_);
 		state_ = State::RELEASE_TOGGLE_12H_24H;
 		ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_RELEASE_US));
 		break;
