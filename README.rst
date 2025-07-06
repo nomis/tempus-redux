@@ -24,6 +24,13 @@ Requires an ESP32-S3.
     (`Thief of Time, 2001 <https://en.wikipedia.org/wiki/Thief_of_Time>`_)
 
 
+Purpose
+--------
+
+Adapt radio clocks in noisy environments that can't get a reliable time signal
+to use NTP instead.
+
+
 Usage
 -----
 
