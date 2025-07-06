@@ -1,6 +1,6 @@
 /*
  * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
- * Copyright 2024  Simon Arlott
+ * Copyright 2024,2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include <esp_err.h>
 #include <esp_log.h>
 #include <esp_timer.h>
+#include <driver/gpio.h>
 #include <freertos/FreeRTOS.h>
 #include <led_strip.h>
 #include <nvs_flash.h>
@@ -31,6 +32,7 @@
 #include <chrono>
 
 #include "clockson/network.h"
+#include "clockson/radio_clock.h"
 #include "clockson/transmit.h"
 #include "clockson/ui.h"
 
@@ -44,9 +46,18 @@ extern "C" void app_main() {
 	}
 	ESP_ERROR_CHECK(err);
 
+	ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_LEVEL2));
+
 	Network &network = *new Network{};
-	Transmit &transmit = *new Transmit{network, GPIO_NUM_1, ACTIVE_LOW};
+	RadioClock &radio_clock = *new RadioClock{
+		network, RADIO_CLOCK, GPIO_NUM_4, GPIO_NUM_2, GPIO_NUM_5, GPIO_NUM_6
+	};
+	Transmit &transmit = *new Transmit{
+		network, radio_clock, GPIO_NUM_1, ACTIVE_LOW
+	};
 	UserInterface &ui = *new UserInterface{network, transmit};
+
+	network.start();
 
 	TaskStatus_t status;
 

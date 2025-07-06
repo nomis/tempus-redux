@@ -1,6 +1,6 @@
 /*
  * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
- * Copyright 2024,2025  Simon Arlott
+ * Copyright 2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,40 +24,48 @@
 #include <atomic>
 #include <cstddef>
 
-#include "time_signal.h"
-
 namespace clockson {
 
 class Network;
-class RadioClock;
 
-class Transmit {
+enum State {
+	POWER_OFF,
+	POWER_ON,
+	RADIO_CONTROL_OFF,
+	RADIO_CONTROL_ON,
+	RUNNING,
+};
+
+class RadioClock {
 public:
-	Transmit(Network &network, RadioClock &radio_clock, gpio_num_t pin,
-		bool active_low);
-	~Transmit() = delete;
+	RadioClock(Network &network, bool present, gpio_num_t power_pin,
+		gpio_num_t enable_pin, gpio_num_t toggle_radio_control_pin,
+		gpio_num_t toggle_12h_24h_pin);
+	~RadioClock() = delete;
 
-	inline uint64_t last_us() const { return last_us_; }
+	void power_on();
 
 private:
-	static constexpr const char *TAG = "clockson.Transmit";
+	static constexpr const char *TAG = "clockson.RadioClock";
 
+	static void enable_interrupt_handler(void *arg);
 	static void event(void *arg);
 
-	inline int active() const { return active_low_ ? 0 : 1; }
-	inline int inactive() const { return active_low_ ? 1 : 0; }
-
+	void enable_interrupt_handler();
 	void event();
+	void release_button(gpio_num_t button);
+	void press_button(gpio_num_t butotn);
 
 	Network &network_;
-	RadioClock &radio_clock_;
-	const gpio_num_t pin_;
-	const bool active_low_;
+	const bool present_;
+	const gpio_num_t power_pin_;
+	const gpio_num_t enable_pin_;
+	const gpio_num_t toggle_radio_control_pin_;
+	const gpio_num_t toggle_12h_24h_pin_;
+	State state_{State::POWER_OFF};
 	esp_timer_handle_t timer_{nullptr};
-	uint64_t offset_us_{0};
-	uint64_t last_signal_s_{0};
-	TimeSignal current_;
-	std::atomic<uint64_t> last_us_{0};
+	int enable_level_{-1};
+	std::atomic<int> isr_enable_level_{-1};
 };
 
 } // namespace clockson

@@ -18,6 +18,12 @@ config CLOCKSON_OUTPUT_ACTIVE_LOW
 	help
 		Configure whether time signalling carrier is active low or high.
 
+config CLOCKSON_MANAGE_RADIO_CLOCK
+	bool "Manage attached radio clock"
+	help
+		Manage an attached radio clock by turning it on when a time signal is
+		first available and setting it to use the 24 hour display format.
+
 config CLOCKSON_UI_LED_BRIGHTNESS
 	int "RGB LED brightness"
 	range 0 255

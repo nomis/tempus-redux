@@ -1,6 +1,6 @@
 /*
  * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
- * Copyright 2024  Simon Arlott
+ * Copyright 2024,2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -132,10 +132,15 @@ Network::Network() {
 			ESP_EVENT_ANY_ID, &network::event_handler, this, &instance_any_id));
 		ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
 			IP_EVENT_STA_GOT_IP, &network::event_handler, this, &instance_got_ip));
-
-		ESP_ERROR_CHECK(esp_wifi_start());
 	} else {
 		ESP_LOGI(TAG, "WiFi unconfigured");
+	}
+}
+
+void Network::start() {
+	if (CONFIG_CLOCKSON_WIFI_SSID[0]) {
+		ESP_LOGI(TAG, "Start WiFi");
+		ESP_ERROR_CHECK(esp_wifi_start());
 	}
 }
 

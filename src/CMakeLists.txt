@@ -3,6 +3,7 @@ idf_component_register(
 		calendar.cpp
 		main.cpp
 		network.cpp
+		radio_clock.cpp
 		time_signal.cpp
 		transmit.cpp
 		ui.cpp

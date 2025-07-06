@@ -1,6 +1,6 @@
 /*
  * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
- * Copyright 2024  Simon Arlott
+ * Copyright 2024,2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "clockson/network.h"
+#include "clockson/radio_clock.h"
 #include "clockson/time_signal.h"
 
 using std::chrono::duration_cast;
@@ -38,8 +39,9 @@ using namespace std::chrono_literals;
 
 namespace clockson {
 
-Transmit::Transmit(Network &network, gpio_num_t pin, bool active_low)
-		: network_(network), pin_(pin), active_low_(active_low) {
+Transmit::Transmit(Network &network, RadioClock &radio_clock, gpio_num_t pin,
+		bool active_low) : network_(network), radio_clock_(radio_clock),
+		pin_(pin), active_low_(active_low) {
 	esp_timer_create_args_t timer_config{};
 	timer_config.callback = event;
 	timer_config.arg = this;
@@ -50,7 +52,7 @@ Transmit::Transmit(Network &network, gpio_num_t pin, bool active_low)
 
 	gpio_config_t config{};
 
-	config.pin_bit_mask = 1ULL << pin,
+	config.pin_bit_mask = 1ULL << pin_,
 	config.mode = GPIO_MODE_OUTPUT;
 	config.pull_up_en = GPIO_PULLUP_DISABLE;
 	config.pull_down_en = GPIO_PULLDOWN_DISABLE;
@@ -154,7 +156,7 @@ void Transmit::event() {
 
 			std::vector<char> message(64);
 
-			std::snprintf(message.data(), message.size(), "%s (offset %" PRIu64 "us)",
+			std::snprintf(message.data(), message.size(), "Transmit %s (offset %" PRIu64 "us)",
 				current_.time().to_string().c_str(), offset_us);
 			ESP_LOGI(TAG, "%s", message.data());
 			network_.syslog(message.data());
@@ -179,6 +181,7 @@ void Transmit::event() {
 			}
 
 			network_.time_slew_next();
+			radio_clock_.power_on();
 			continue;
 		}
 
