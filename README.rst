@@ -69,6 +69,12 @@ Connect the radio clock to the ESP32 using the `KiCad schematic
 .. image:: circuits/youshiko-yc8091-xxl-radio-controlled-wall-clock-sch.svg
    :alt: Schematic to connect to a Youshiko YC8091 radio clock
 
+.. image:: circuits/youshiko-yc8091-xxl-radio-controlled-wall-clock-example.webp
+   :alt: Example of connection to a Youshiko YC8091 radio clock
+
+Disconnect the buzzer if your MOSFET isn't capable of handling the current draw
+when it beeps.
+
 Build
 -----
 
