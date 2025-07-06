@@ -18,42 +18,41 @@
 
 #include "clockson/radio_clock.h"
 
-#include "clockson/freertos.h"
 
 #include <esp_err.h>
 #include <esp_log.h>
 #include <esp_timer.h>
-#include <freertos/FreeRTOS.h>
 #include <driver/gpio.h>
-
-#include <chrono>
 
 #include "clockson/network.h"
 
-using std::chrono::microseconds;
-using std::chrono::system_clock;
-using namespace std::chrono_literals;
-
 namespace clockson {
 
-RadioClock::RadioClock(Network &network, bool present, gpio_num_t power_pin,
+RadioClock::RadioClock(Network &network, gpio_num_t power_pin,
 		gpio_num_t enable_pin, gpio_num_t toggle_radio_control_pin,
-		gpio_num_t toggle_12h_24h_pin) : network_(network), present_(present),
+		gpio_num_t toggle_12h_24h_pin) : network_(network),
 		power_pin_(power_pin), enable_pin_(enable_pin),
 		toggle_radio_control_pin_(toggle_radio_control_pin),
 		toggle_12h_24h_pin_(toggle_12h_24h_pin) {
-	if (!present_) {
-		return;
+	{
+		esp_timer_create_args_t timer_config{};
+		timer_config.callback = enable_event;
+		timer_config.arg = this;
+		timer_config.dispatch_method = ESP_TIMER_TASK;
+		timer_config.name = "radio_clock_enable";
+
+		ESP_ERROR_CHECK(esp_timer_create(&timer_config, &enable_timer_));
 	}
 
-	esp_timer_create_args_t timer_config{};
-	timer_config.callback = event;
-	timer_config.arg = this;
-	timer_config.dispatch_method = ESP_TIMER_TASK;
-	timer_config.name = "radio_clock";
+	{
+		esp_timer_create_args_t timer_config{};
+		timer_config.callback = control_event;
+		timer_config.arg = this;
+		timer_config.dispatch_method = ESP_TIMER_TASK;
+		timer_config.name = "radio_clock_button";
 
-	ESP_ERROR_CHECK(esp_timer_create(&timer_config, &timer_));
-	ESP_ERROR_CHECK(esp_timer_start_once(timer_, microseconds(1s).count()));
+		ESP_ERROR_CHECK(esp_timer_create(&timer_config, &control_timer_));
+	}
 
 	{
 		gpio_config_t config{};
@@ -86,15 +85,12 @@ RadioClock::RadioClock(Network &network, bool present, gpio_num_t power_pin,
 }
 
 void RadioClock::power_on() {
-	if (present_ && state_ == State::POWER_OFF) {
+	if (state_ == State::POWER_OFF) {
 		ESP_LOGI(TAG, "Power on radio clock");
 		network_.syslog("Power on radio clock");
 		ESP_ERROR_CHECK(gpio_set_level(power_pin_, 0));
 
-		state_ = State::POWER_ON;
-
-		ESP_ERROR_CHECK(gpio_isr_handler_add(enable_pin_, enable_interrupt_handler, this));
-		ESP_ERROR_CHECK(gpio_intr_enable(enable_pin_));
+		state_ = State::POWER_ON_WAIT;
 	}
 }
 
@@ -104,57 +100,106 @@ void RadioClock::enable_interrupt_handler(void *arg) {
 
 void RadioClock::enable_interrupt_handler() {
 	isr_enable_level_ = gpio_get_level(enable_pin_);
-	esp_timer_stop(timer_);
-	esp_timer_start_once(timer_, microseconds(1us).count());
+	esp_timer_stop(enable_timer_);
+	ESP_ERROR_CHECK(esp_timer_start_once(enable_timer_, 1));
 }
 
-void RadioClock::event(void *arg) {
-	reinterpret_cast<RadioClock*>(arg)->event();
+void RadioClock::enable_event(void *arg) {
+	reinterpret_cast<RadioClock*>(arg)->enable_event();
 }
 
-void RadioClock::event() {
-	if (isr_enable_level_ != enable_level_) {
-		enable_level_ = isr_enable_level_;
+void RadioClock::enable_event() {
+	int new_enable_level = isr_enable_level_;
 
-		if (enable_level_) {
-			ESP_LOGI(TAG, "Time signal ignored");
-			network_.syslog("Time signal ignored");
+	if (new_enable_level != enable_level_) {
+		enable_level_ = new_enable_level;
+		time_signal_enabled_ = !enable_level_;
 
-			if (state_ == State::RADIO_CONTROL_OFF) {
-				state_ = State::RADIO_CONTROL_ON;
-
-				ESP_LOGI(TAG, "Setting time format to 24 hours");
-				network_.syslog("Setting time format to 24 hours");
-
-				press_button(toggle_12h_24h_pin_);
-				vTaskDelay(200 / portTICK_PERIOD_MS);
-
-				ESP_LOGI(TAG, "Turning on radio control");
-				network_.syslog("Turning on radio control");
-
-				press_button(toggle_radio_control_pin_);
-			}
-		} else {
+		if (time_signal_enabled_) {
 			ESP_LOGI(TAG, "Time signal requested");
 			network_.syslog("Time signal requested");
 
 			if (state_ == State::POWER_ON) {
-				ESP_LOGI(TAG, "Turning off radio control");
-				network_.syslog("Turning off radio control");
-
-				press_button(toggle_radio_control_pin_);
-
-				state_ = State::RADIO_CONTROL_OFF;
+				turn_off_radio_control();
 			} else if (state_ == State::RADIO_CONTROL_ON) {
-				ESP_LOGI(TAG, "Radio clock ready");
-				network_.syslog("Radio clock ready");
+				ready();
+			}
+		} else {
+			ESP_LOGI(TAG, "Time signal ignored");
+			network_.syslog("Time signal ignored");
 
-				state_ = State::RUNNING;
+			if (state_ == State::RADIO_CONTROL_OFF) {
+				set_time_format_24h();
 			}
 		}
 	}
+}
 
-	esp_timer_start_once(timer_, microseconds(1s).count());
+void RadioClock::control_event(void *arg) {
+	reinterpret_cast<RadioClock*>(arg)->control_event();
+}
+
+void RadioClock::control_event() {
+	switch (state_) {
+	case State::POWER_OFF:
+	case State::POWER_ON_WAIT:
+		state_ = State::POWER_ON_WAIT;
+		enable_interrupt_handler();
+		ESP_ERROR_CHECK(gpio_isr_handler_add(enable_pin_, enable_interrupt_handler, this));
+		ESP_ERROR_CHECK(gpio_intr_enable(enable_pin_));
+		break;
+
+	case State::POWER_ON:
+		break;
+
+	case State::PRESS_RADIO_CONTROL_OFF:
+		release_button(toggle_radio_control_pin_);
+		state_ = State::RELEASE_RADIO_CONTROL_OFF;
+		ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_RELEASE_US));
+		break;
+
+	case State::RELEASE_RADIO_CONTROL_OFF:
+		state_ = State::RADIO_CONTROL_OFF;
+		if (!time_signal_enabled_) {
+			set_time_format_24h();
+		}
+		break;
+
+	case State::RADIO_CONTROL_OFF:
+		break;
+
+	case State::PRESS_TOGGLE_12H_24H:
+		release_button(toggle_radio_control_pin_);
+		state_ = State::RELEASE_TOGGLE_12H_24H;
+		ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_RELEASE_US));
+		break;
+
+	case State::RELEASE_TOGGLE_12H_24H:
+		ESP_LOGI(TAG, "Turning on radio control");
+		network_.syslog("Turning on radio control");
+
+		press_button(toggle_radio_control_pin_);
+		state_ = State::PRESS_RADIO_CONTROL_ON;
+		ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_PRESS_US));
+		break;
+
+	case State::PRESS_RADIO_CONTROL_ON:
+		release_button(toggle_radio_control_pin_);
+		state_ = State::RELEASE_RADIO_CONTROL_ON;
+		ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_RELEASE_US));
+		break;
+
+	case State::RELEASE_RADIO_CONTROL_ON:
+		state_ = State::RADIO_CONTROL_ON;
+		if (time_signal_enabled_) {
+			ready();
+		}
+		break;
+
+	case State::RADIO_CONTROL_ON:
+	case State::RUNNING:
+		break;
+	}
 }
 
 void RadioClock::release_button(gpio_num_t button) {
@@ -180,9 +225,31 @@ void RadioClock::press_button(gpio_num_t button) {
 
 	ESP_ERROR_CHECK(gpio_set_level(button, 0));
 	ESP_ERROR_CHECK(gpio_config(&config));
+}
 
-	vTaskDelay(200 / portTICK_PERIOD_MS);
-	release_button(button);
+void RadioClock::turn_off_radio_control() {
+	ESP_LOGI(TAG, "Turning off radio control");
+	network_.syslog("Turning off radio control");
+
+	press_button(toggle_radio_control_pin_);
+	state_ = State::PRESS_RADIO_CONTROL_OFF;
+	ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_PRESS_US));
+}
+
+void RadioClock::set_time_format_24h() {
+	ESP_LOGI(TAG, "Setting time format to 24 hours");
+	network_.syslog("Setting time format to 24 hours");
+
+	press_button(toggle_12h_24h_pin_);
+	state_ = State::PRESS_TOGGLE_12H_24H;
+	ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_PRESS_US));
+}
+
+void RadioClock::ready() {
+	ESP_LOGI(TAG, "Radio clock ready");
+	network_.syslog("Radio clock ready");
+
+	state_ = State::RUNNING;
 }
 
 } // namespace clockson

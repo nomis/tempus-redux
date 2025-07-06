@@ -39,7 +39,7 @@ using namespace std::chrono_literals;
 
 namespace clockson {
 
-Transmit::Transmit(Network &network, RadioClock &radio_clock, gpio_num_t pin,
+Transmit::Transmit(Network &network, RadioClock *radio_clock, gpio_num_t pin,
 		bool active_low) : network_(network), radio_clock_(radio_clock),
 		pin_(pin), active_low_(active_low) {
 	esp_timer_create_args_t timer_config{};
@@ -181,7 +181,9 @@ void Transmit::event() {
 			}
 
 			network_.time_slew_next();
-			radio_clock_.power_on();
+			if (radio_clock_) {
+				radio_clock_->power_on();
+			}
 			continue;
 		}
 

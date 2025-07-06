@@ -33,7 +33,7 @@ class RadioClock;
 
 class Transmit {
 public:
-	Transmit(Network &network, RadioClock &radio_clock, gpio_num_t pin,
+	Transmit(Network &network, RadioClock *radio_clock, gpio_num_t pin,
 		bool active_low);
 	~Transmit() = delete;
 
@@ -50,7 +50,7 @@ private:
 	void event();
 
 	Network &network_;
-	RadioClock &radio_clock_;
+	RadioClock *radio_clock_;
 	const gpio_num_t pin_;
 	const bool active_low_;
 	esp_timer_handle_t timer_{nullptr};

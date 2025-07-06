@@ -49,9 +49,9 @@ extern "C" void app_main() {
 	ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_LEVEL2));
 
 	Network &network = *new Network{};
-	RadioClock &radio_clock = *new RadioClock{
-		network, RADIO_CLOCK, GPIO_NUM_4, GPIO_NUM_2, GPIO_NUM_5, GPIO_NUM_6
-	};
+	RadioClock *radio_clock = RADIO_CLOCK_ENABLED ? new RadioClock{
+		network, GPIO_NUM_4, GPIO_NUM_2, GPIO_NUM_5, GPIO_NUM_6
+	} : nullptr;
 	Transmit &transmit = *new Transmit{
 		network, radio_clock, GPIO_NUM_1, ACTIVE_LOW
 	};

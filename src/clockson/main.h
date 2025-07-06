@@ -33,6 +33,6 @@ static constexpr const bool ACTIVE_LOW = CONFIG_CLOCKSON_OUTPUT_ACTIVE_LOW;
 #ifndef CONFIG_CLOCKSON_MANAGE_RADIO_CLOCK
 #define CONFIG_CLOCKSON_MANAGE_RADIO_CLOCK 0
 #endif
-static constexpr const bool RADIO_CLOCK = CONFIG_CLOCKSON_MANAGE_RADIO_CLOCK;
+static constexpr const bool RADIO_CLOCK_ENABLED = CONFIG_CLOCKSON_MANAGE_RADIO_CLOCK;
 
 } // namespace clockson
