@@ -2773,7 +2773,7 @@
 		)
 		(uuid "fbe2e3d8-a245-4f81-ab1e-e3f277a3fcd3")
 	)
-	(global_label "TOGGLE_RADIO_SIGNAL"
+	(global_label "~{TOGGLE_RADIO_SIGNAL}"
 		(shape input)
 		(at 181.61 96.52 180)
 		(fields_autoplaced yes)
@@ -2785,7 +2785,7 @@
 		)
 		(uuid "569f343b-18af-46d2-a629-7f8433cb90d3")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 157.579 96.52 0)
+			(at 156.309 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2795,7 +2795,7 @@
 			)
 		)
 	)
-	(global_label "TOGGLE_RADIO_SIGNAL"
+	(global_label "~{TOGGLE_RADIO_SIGNAL}"
 		(shape output)
 		(at 100.33 60.96 180)
 		(fields_autoplaced yes)
@@ -2807,7 +2807,7 @@
 		)
 		(uuid "7ab2ced3-647d-4fa1-9a4c-8de128b3aa5e")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 76.299 60.96 0)
+			(at 75.029 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2817,7 +2817,7 @@
 			)
 		)
 	)
-	(global_label "TOGGLE_12H_24H"
+	(global_label "~{TOGGLE_12H_24H}"
 		(shape input)
 		(at 181.61 71.12 180)
 		(fields_autoplaced yes)
@@ -2829,7 +2829,7 @@
 		)
 		(uuid "96b87c9d-9ffe-48e5-9b00-2920c71facb0")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 162.1754 71.12 0)
+			(at 160.9054 71.12 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2839,7 +2839,7 @@
 			)
 		)
 	)
-	(global_label "MSF"
+	(global_label "~{MSF}"
 		(shape output)
 		(at 100.33 50.8 180)
 		(fields_autoplaced yes)
@@ -2851,7 +2851,7 @@
 		)
 		(uuid "9f7e0d91-808b-45cb-91ac-bc9ef9e04d8c")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 93.5953 50.8 0)
+			(at 92.3253 50.8 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2861,7 +2861,7 @@
 			)
 		)
 	)
-	(global_label "MSF"
+	(global_label "~{MSF}"
 		(shape input)
 		(at 46.99 34.29 0)
 		(fields_autoplaced yes)
@@ -2873,7 +2873,7 @@
 		)
 		(uuid "a314366f-e102-4b59-b3cf-b33ba392072c")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 53.7247 34.29 0)
+			(at 54.9947 34.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2883,7 +2883,7 @@
 			)
 		)
 	)
-	(global_label "MSF_EN"
+	(global_label "~{MSF_EN}"
 		(shape output)
 		(at 48.26 36.83 0)
 		(fields_autoplaced yes)
@@ -2895,7 +2895,7 @@
 		)
 		(uuid "ac496932-51f2-4402-bebf-33ed0039a61a")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 58.4418 36.83 0)
+			(at 59.7118 36.83 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2905,7 +2905,7 @@
 			)
 		)
 	)
-	(global_label "POWER"
+	(global_label "~{POWER}"
 		(shape output)
 		(at 100.33 58.42 180)
 		(fields_autoplaced yes)
@@ -2917,7 +2917,7 @@
 		)
 		(uuid "addc55bc-db67-4c44-9e1a-1ef38ca275f9")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 90.8739 58.42 0)
+			(at 89.6039 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2927,7 +2927,7 @@
 			)
 		)
 	)
-	(global_label "POWER"
+	(global_label "~{POWER}"
 		(shape output)
 		(at 85.09 45.72 270)
 		(fields_autoplaced yes)
@@ -2949,7 +2949,7 @@
 			)
 		)
 	)
-	(global_label "TOGGLE_12H_24H"
+	(global_label "~{TOGGLE_12H_24H}"
 		(shape output)
 		(at 100.33 63.5 180)
 		(fields_autoplaced yes)
@@ -2961,7 +2961,7 @@
 		)
 		(uuid "df424cce-7225-4196-90cd-801191bca2d9")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 80.8954 63.5 0)
+			(at 79.6254 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2971,7 +2971,7 @@
 			)
 		)
 	)
-	(global_label "MSF_EN"
+	(global_label "~{MSF_EN}"
 		(shape input)
 		(at 101.6 53.34 180)
 		(fields_autoplaced yes)
@@ -2983,7 +2983,7 @@
 		)
 		(uuid "e83155de-c5a3-4357-86c0-4e11f4306652")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 91.4182 53.34 0)
+			(at 90.1482 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
