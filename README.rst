@@ -1,6 +1,9 @@
 Tempus Redux |Build Status|
 ===========================
 
+Overview
+--------
+
 ESP32 "Time from NPL" (MSF) Radio clock signal generator.
 
 Requires an ESP32-S3.
@@ -29,7 +32,6 @@ Purpose
 
 Adapt radio clocks in noisy environments that can't get a reliable time signal
 to use NTP instead.
-
 
 Usage
 -----
