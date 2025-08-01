@@ -1,6 +1,6 @@
 /*
  * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
- * Copyright 2024  Simon Arlott
+ * Copyright 2024-2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #include "freertos.h"
 
 #include <cstddef>
+#include <string_view>
 
 #include <led_strip.h>
 
@@ -62,12 +63,22 @@ public:
 
 private:
 	static constexpr uint8_t LED_LEVEL = CONFIG_CLOCKSON_UI_LED_BRIGHTNESS;
+#ifndef CONFIG_CLOCKSON_OTA_URL
+#define CONFIG_CLOCKSON_OTA_URL ""
+#endif
+	static constexpr const char *OTA_URL = CONFIG_CLOCKSON_OTA_URL;
+#ifndef CONFIG_CLOCKSON_UI_PASSWORD
+#define CONFIG_CLOCKSON_UI_PASSWORD ""
+#endif
+	static constexpr const std::string_view COMMAND_PASSWORD = CONFIG_CLOCKSON_UI_PASSWORD;
 
 	void set_led(ui::RGBColour colour);
+	void handle_command();
 
 	Network &network_;
 	Transmit &transmit_;
 	led_strip_handle_t led_strip_{nullptr};
+	int socket_{-1};
 };
 
 } // namespace clockson

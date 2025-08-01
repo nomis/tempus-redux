@@ -31,6 +31,16 @@ config CLOCKSON_UI_LED_BRIGHTNESS
 	help
 		Configure LED brightness.
 
+config CLOCKSON_UI_PASSWORD
+	string "Remote Password"
+	help
+		Password to manage OTA updates (32000/udp).
+
+config CLOCKSON_OTA_URL
+	string "OTA Update URL"
+	help
+		Download URL for OTA updates.
+
 choice CLOCKSON_TEST_TIME
 	prompt "Test time signals"
 	default CLOCKSON_TEST_TIME_NONE

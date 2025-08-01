@@ -9,11 +9,14 @@ idf_component_register(
 		ui.cpp
 
 	REQUIRES
+		app_update
 		driver
 		espcoredump
+		esp_https_ota
 		esp_timer
 		esp_wifi
 		freertos
+		mbedtls
 		nvs_flash
 )
 

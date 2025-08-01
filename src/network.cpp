@@ -1,6 +1,6 @@
 /*
  * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
- * Copyright 2024,2025  Simon Arlott
+ * Copyright 2024-2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,13 @@
  */
 
 #include "clockson/network.h"
+#include "esp_ota_ops.h"
 
+#include <esp_app_desc.h>
 #include <esp_err.h>
 #include <esp_log.h>
 #include <esp_netif_sntp.h>
+#include <esp_ota_ops.h>
 #include <esp_sntp.h>
 #include <esp_timer.h>
 #include <esp_wifi.h>
@@ -35,6 +38,7 @@
 #include <cstdio>
 #include <cstring>
 #include <chrono>
+#include <string>
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -153,6 +157,25 @@ void event_handler(void *arg, esp_event_base_t event_base,
 
 } // namespace network
 
+template<typename T, size_t size>
+static inline std::string null_terminated_string(T(&data)[size]) {
+		T *found = reinterpret_cast<T*>(std::memchr(&data[0], '\0', size));
+		return std::string{&data[0], found ? (found - &data[0]) : size};
+};
+
+static const char *ota_state_string(esp_ota_img_states_t state) {
+	switch (state) {
+	case ESP_OTA_IMG_NEW: return "new";
+	case ESP_OTA_IMG_PENDING_VERIFY: return "pending-verify";
+	case ESP_OTA_IMG_VALID: return "valid";
+	case ESP_OTA_IMG_INVALID: return "invalid";
+	case ESP_OTA_IMG_ABORTED: return "aborted";
+	case ESP_OTA_IMG_UNDEFINED: return "undefined";
+	}
+
+	return "unknown";
+}
+
 void Network::event_handler(esp_event_base_t event_base, int32_t event_id,
 		void *event_data) {
 	if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
@@ -168,7 +191,47 @@ void Network::event_handler(esp_event_base_t event_base, int32_t event_id,
 	} else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
 		ip_event_got_ip_t* event = reinterpret_cast<ip_event_got_ip_t*>(event_data);
 		ESP_LOGI(TAG, "WiFi IPv4 address: " IPSTR, IP2STR(&event->ip_info.ip));
+
+		ota_status();
 		sntp_restart();
+	}
+}
+
+void Network::ota_status() {
+	const esp_partition_t *current = esp_ota_get_running_partition();
+	const esp_partition_t *next = esp_ota_get_next_update_partition(nullptr);
+	const esp_partition_t *boot = esp_ota_get_boot_partition();
+	const esp_partition_t *part = current;
+
+	for (int i = 0; i < esp_ota_get_app_partition_count(); i++, part = esp_ota_get_next_update_partition(part)) {
+		esp_app_desc_t desc;
+		esp_ota_img_states_t state;
+		std::string info = "Partition ";
+
+		if (esp_ota_get_state_partition(part, &state)) {
+			state = ESP_OTA_IMG_UNDEFINED;
+		}
+
+		info += std::to_string(i) + " " + part->label + ": ";
+		if (part == current) {
+			info += " [current]";
+		}
+		if (part == next) {
+			info += " [next]";
+		}
+		if (part == boot) {
+			info += " [boot]";
+		}
+		info += ' ';
+		info += ota_state_string(state);
+
+		if (!esp_ota_get_partition_description(part, &desc)) {
+			info += " | " + null_terminated_string(desc.project_name);
+			info += " | " + null_terminated_string(desc.version);
+			info += " | " + null_terminated_string(desc.date) + " " + null_terminated_string(desc.time);
+		}
+
+		syslog(info);
 	}
 }
 
