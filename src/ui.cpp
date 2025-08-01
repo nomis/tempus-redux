@@ -18,6 +18,7 @@
 
 #include "clockson/ui.h"
 
+#include <esp_core_dump.h>
 #include <esp_crt_bundle.h>
 #include <esp_https_ota.h>
 #include <esp_ota_ops.h>
@@ -122,7 +123,17 @@ void UserInterface::handle_command() {
 	if (command == " restart") {
 		esp_restart();
 	} else if (command == " status") {
-		network_.ota_status();
+		network_.status();
+	} else if (command == " erase") {
+		esp_err_t err = esp_core_dump_image_erase();
+
+		if (err == ESP_OK) {
+			network_.syslog("Core dump erased");
+		} else if (err == ESP_ERR_NOT_FOUND) {
+			network_.syslog("Core dump partition not found");
+		} else {
+			network_.syslog(std::string{"Core dump erase error: "} + std::to_string(err));
+		}
 	} else if (command == " good") {
 		esp_ota_mark_app_valid_cancel_rollback();
 	} else if (command == " bad") {

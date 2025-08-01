@@ -53,7 +53,7 @@ public:
 
 	void start();
 	void syslog(std::string_view message);
-	void ota_status();
+	void status();
 
 private:
 	static constexpr const char *TAG = "clockson.Network";

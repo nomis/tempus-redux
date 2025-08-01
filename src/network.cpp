@@ -192,12 +192,12 @@ void Network::event_handler(esp_event_base_t event_base, int32_t event_id,
 		ip_event_got_ip_t* event = reinterpret_cast<ip_event_got_ip_t*>(event_data);
 		ESP_LOGI(TAG, "WiFi IPv4 address: " IPSTR, IP2STR(&event->ip_info.ip));
 
-		ota_status();
+		status();
 		sntp_restart();
 	}
 }
 
-void Network::ota_status() {
+void Network::status() {
 	const esp_partition_t *current = esp_ota_get_running_partition();
 	const esp_partition_t *next = esp_ota_get_next_update_partition(nullptr);
 	const esp_partition_t *boot = esp_ota_get_boot_partition();
@@ -232,6 +232,20 @@ void Network::ota_status() {
 		}
 
 		syslog(info);
+	}
+
+	part = esp_partition_find_first(
+		ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_COREDUMP,
+		nullptr);
+	uint32_t size;
+
+	if (!part || esp_partition_read(part, 0, &size, sizeof(size)))
+		return;
+
+	if (size != UINT32_MAX) {
+		syslog("Core dump present");
+	} else {
+		syslog("Core dump absent");
 	}
 }
 
