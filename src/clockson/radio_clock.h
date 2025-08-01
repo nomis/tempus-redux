@@ -61,6 +61,7 @@ private:
 	static constexpr uint64_t POWER_ON_WAIT_US = 1 * 1000 * 1000;
 	static constexpr uint64_t BUTTON_PRESS_US = 200 * 1000;
 	static constexpr uint64_t BUTTON_RELEASE_US = 200 * 1000;
+	static constexpr uint64_t RETRY_US = 10 * 1000 * 1000;
 
 	static void enable_interrupt_handler(void *arg);
 	static void enable_event(void *arg);

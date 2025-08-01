@@ -194,10 +194,20 @@ void RadioClock::control_event() {
 		state_ = State::RADIO_CONTROL_ON;
 		if (time_signal_enabled_) {
 			ready();
+		} else {
+			ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, RETRY_US));
 		}
 		break;
 
 	case State::RADIO_CONTROL_ON:
+		ESP_LOGI(TAG, "Turning on radio control");
+		network_.syslog("Turning on radio control");
+
+		press_button(toggle_radio_control_pin_);
+		state_ = State::PRESS_RADIO_CONTROL_ON;
+		ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_PRESS_US));
+		break;
+
 	case State::RUNNING:
 		break;
 	}
@@ -251,6 +261,7 @@ void RadioClock::ready() {
 	network_.syslog("Radio clock ready");
 
 	state_ = State::RUNNING;
+	esp_timer_stop(control_timer_);
 }
 
 } // namespace clockson
