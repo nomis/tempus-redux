@@ -158,8 +158,7 @@ void Transmit::event() {
 
 			std::snprintf(message.data(), message.size(), "Transmit %s (offset %" PRIu64 "us)",
 				current_.time().to_string().c_str(), offset_us);
-			ESP_LOGI(TAG, "%s", message.data());
-			network_.syslog(message.data());
+			network_.syslog(TAG, message.data());
 
 			/*
 			 * Skip everything that would have happened in the past if we start

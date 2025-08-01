@@ -235,7 +235,7 @@ void Network::status() {
 			info += " | " + null_terminated_string(desc.date) + " " + null_terminated_string(desc.time);
 		}
 
-		syslog(info);
+		syslog(TAG, info);
 	}
 
 	part = esp_partition_find_first(
@@ -247,9 +247,9 @@ void Network::status() {
 		return;
 
 	if (size != UINT32_MAX) {
-		syslog("Core dump present");
+		syslog(TAG, "Core dump present");
 	} else {
-		syslog("Core dump absent");
+		syslog(TAG, "Core dump absent");
 	}
 }
 
@@ -351,7 +351,9 @@ int Network::adjtime(const struct timeval *delta, struct timeval *outdelta) {
 	return 0;
 }
 
-void Network::syslog(std::string_view message) {
+void Network::syslog(const char *tag, std::string_view message) {
+	ESP_LOGI(TAG, "%.*s", message.length(), message.data());
+
 	if (syslog_ == -1) {
 		return;
 	}

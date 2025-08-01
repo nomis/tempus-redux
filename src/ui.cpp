@@ -128,11 +128,11 @@ void UserInterface::handle_command() {
 		esp_err_t err = esp_core_dump_image_erase();
 
 		if (err == ESP_OK) {
-			network_.syslog("Core dump erased");
+			network_.syslog(TAG, "Core dump erased");
 		} else if (err == ESP_ERR_NOT_FOUND) {
-			network_.syslog("Core dump partition not found");
+			network_.syslog(TAG, "Core dump partition not found");
 		} else {
-			network_.syslog(std::string{"Core dump erase error: "} + std::to_string(err));
+			network_.syslog(TAG, std::string{"Core dump erase error: "} + std::to_string(err));
 		}
 	} else if (command == " good") {
 		esp_ota_mark_app_valid_cancel_rollback();
@@ -151,14 +151,14 @@ void UserInterface::handle_command() {
 
 		esp_err_t err = esp_https_ota_begin(&ota_config, &handle);
 		if (err) {
-			network_.syslog(std::string{"OTA begin failed: "} + std::to_string(err));
+			network_.syslog(TAG, std::string{"OTA begin failed: "} + std::to_string(err));
 			return;
 		}
 
 		const int size = esp_https_ota_get_image_size(handle);
 		uint64_t last_report_us = 0;
 		int last_progress = -1;
-		network_.syslog(std::string{"OTA size: "} + std::to_string(size));
+		network_.syslog(TAG, std::string{"OTA size: "} + std::to_string(size));
 
 		while (true) {
 			err = esp_https_ota_perform(handle);
@@ -167,7 +167,7 @@ void UserInterface::handle_command() {
 			uint64_t now_us = esp_timer_get_time();
 
 			if (err == ESP_OK || (progress != last_progress && now_us - last_report_us >= 500000ULL)) {
-				network_.syslog(std::string{"OTA progress: "} + std::to_string(progress) + "%");
+				network_.syslog(TAG, std::string{"OTA progress: "} + std::to_string(progress) + "%");
 				last_progress = progress;
 				last_report_us = now_us;
 			}
@@ -175,14 +175,14 @@ void UserInterface::handle_command() {
 			if (err == ESP_OK) {
 				err = esp_https_ota_finish(handle);
 				if (err) {
-					network_.syslog(std::string{"OTA finish failed: "} + std::to_string(err));
+					network_.syslog(TAG, std::string{"OTA finish failed: "} + std::to_string(err));
 				} else {
-					network_.syslog(std::string{"OTA finished"});
+					network_.syslog(TAG, std::string{"OTA finished"});
 					esp_restart();
 				}
 				return;
 			} else if (err != ESP_ERR_HTTPS_OTA_IN_PROGRESS) {
-				network_.syslog(std::string{"OTA perform failed: "} + std::to_string(err));
+				network_.syslog(TAG, std::string{"OTA perform failed: "} + std::to_string(err));
 				esp_https_ota_abort(handle);
 				return;
 			}

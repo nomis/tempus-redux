@@ -74,6 +74,7 @@ private:
 	void press_button(gpio_num_t button);
 
 	void turn_off_radio_control();
+	void turn_on_radio_control();
 	void set_time_format_24h();
 	void ready();
 

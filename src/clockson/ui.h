@@ -62,6 +62,7 @@ public:
 	void main_loop();
 
 private:
+	static constexpr const char *TAG = "clockson.UI";
 	static constexpr uint8_t LED_LEVEL = CONFIG_CLOCKSON_UI_LED_BRIGHTNESS;
 #ifndef CONFIG_CLOCKSON_OTA_URL
 #define CONFIG_CLOCKSON_OTA_URL ""

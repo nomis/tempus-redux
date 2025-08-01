@@ -52,7 +52,7 @@ public:
 	static void time_slew_next();
 
 	void start();
-	void syslog(std::string_view message);
+	void syslog(const char *tag, std::string_view message);
 	void status();
 
 private:
