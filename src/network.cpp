@@ -203,6 +203,10 @@ void Network::status() {
 	const esp_partition_t *boot = esp_ota_get_boot_partition();
 	const esp_partition_t *part = current;
 
+	if (part->subtype == ESP_PARTITION_SUBTYPE_APP_FACTORY) {
+		part = esp_ota_get_next_update_partition(part);
+	}
+
 	for (int i = 0; i < esp_ota_get_app_partition_count(); i++, part = esp_ota_get_next_update_partition(part)) {
 		esp_app_desc_t desc;
 		esp_ota_img_states_t state;
