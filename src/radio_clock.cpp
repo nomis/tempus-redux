@@ -112,22 +112,50 @@ void RadioClock::enable_event() {
 	int new_enable_level = isr_enable_level_;
 
 	if (new_enable_level != enable_level_) {
+		uint64_t now_us = esp_timer_get_time();
+
 		enable_level_ = new_enable_level;
 		time_signal_enabled_ = !enable_level_;
 
 		if (time_signal_enabled_) {
-			network_.syslog(TAG, "Time signal requested");
+			std::string message = "Time signal requested";
+			uint64_t duration_us = now_us - time_signal_change_us_;
+
+			if (time_signal_change_us_) {
+				message += " (" + std::to_string(duration_us) + "us)";
+			}
+			time_signal_change_us_ = now_us;
+
+			network_.syslog(TAG, message);
 
 			if (state_ == State::POWER_ON) {
 				turn_off_radio_control();
 			} else if (state_ == State::RADIO_CONTROL_ON) {
 				ready();
+			} else if (state_ == State::RUNNING) {
+				cancel_idle_timeout();
 			}
 		} else {
-			network_.syslog(TAG, "Time signal ignored");
+			std::string message = "Time signal ignored";
+			uint64_t duration_us = now_us - time_signal_change_us_;
+
+			if (time_signal_change_us_) {
+				message += " (" + std::to_string(duration_us) + "us)";
+			}
+			time_signal_change_us_ = now_us;
+
+			network_.syslog(TAG, message);
 
 			if (state_ == State::RADIO_CONTROL_OFF) {
 				set_time_format_24h();
+			}
+
+			if (state_ == State::RUNNING) {
+				if (duration_us >= FAILURE_MIN_US && duration_us <= FAILURE_MAX_US) {
+					recover();
+				} else {
+					start_idle_timeout();
+				}
 			}
 		}
 	}
@@ -172,6 +200,9 @@ void RadioClock::control_event() {
 		ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, BUTTON_RELEASE_US));
 		break;
 
+	case State::RUNNING:
+		network_.syslog(TAG, "Radio clock has stopped requesting the time signal");
+		[[fallthrough]];
 	case State::RELEASE_TOGGLE_12H_24H:
 	case State::RADIO_CONTROL_ON:
 		turn_on_radio_control();
@@ -190,9 +221,6 @@ void RadioClock::control_event() {
 		} else {
 			ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, RETRY_US));
 		}
-		break;
-
-	case State::RUNNING:
 		break;
 	}
 }
@@ -250,6 +278,23 @@ void RadioClock::ready() {
 	network_.syslog(TAG, "Radio clock ready");
 
 	state_ = State::RUNNING;
+	esp_timer_stop(control_timer_);
+}
+
+void RadioClock::recover() {
+	network_.syslog(TAG, "Radio clock has failed to use the time signal");
+
+	state_ = State::RADIO_CONTROL_ON;
+	esp_timer_stop(control_timer_);
+	ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, RETRY_US));
+}
+
+void RadioClock::start_idle_timeout() {
+	esp_timer_stop(control_timer_);
+	ESP_ERROR_CHECK(esp_timer_start_once(control_timer_, IDLE_TIMEOUT_US));
+}
+
+void RadioClock::cancel_idle_timeout() {
 	esp_timer_stop(control_timer_);
 }
 

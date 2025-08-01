@@ -58,10 +58,16 @@ public:
 
 private:
 	static constexpr const char *TAG = "clockson.RadioClock";
-	static constexpr uint64_t POWER_ON_WAIT_US = 1 * 1000 * 1000;
-	static constexpr uint64_t BUTTON_PRESS_US = 200 * 1000;
-	static constexpr uint64_t BUTTON_RELEASE_US = 200 * 1000;
-	static constexpr uint64_t RETRY_US = 10 * 1000 * 1000;
+	static constexpr uint64_t POWER_ON_WAIT_US = 1ULL * 1000 * 1000;
+	static constexpr uint64_t BUTTON_PRESS_US = 200ULL * 1000;
+	static constexpr uint64_t BUTTON_RELEASE_US = 200ULL * 1000;
+	/* Try turning on radio control again if it has no effect */
+	static constexpr uint64_t RETRY_US = 10ULL * 1000 * 1000;
+	/* Radio clock has failed if it requests the time for exactly 7 minutes */
+	static constexpr uint64_t FAILURE_MIN_US = (7ULL * 60 - 5) * 1000 * 1000;
+	static constexpr uint64_t FAILURE_MAX_US = (7ULL * 60 + 5) * 1000 * 1000;
+	/* Radio clock has failed if it doesn't request the time for 25 hours */
+	static constexpr uint64_t IDLE_TIMEOUT_US = 25ULL * 60 * 60 * 1000 * 1000;
 
 	static void enable_interrupt_handler(void *arg);
 	static void enable_event(void *arg);
@@ -77,6 +83,9 @@ private:
 	void turn_on_radio_control();
 	void set_time_format_24h();
 	void ready();
+	void recover();
+	void start_idle_timeout();
+	void cancel_idle_timeout();
 
 	Network &network_;
 	const gpio_num_t power_pin_;
@@ -88,6 +97,7 @@ private:
 	int enable_level_{-1};
 	std::atomic<int> isr_enable_level_{-1};
 	bool time_signal_enabled_{false};
+	uint64_t time_signal_change_us_{0};
 	esp_timer_handle_t control_timer_{nullptr};
 };
 
