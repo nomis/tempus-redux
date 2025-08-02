@@ -1,29 +1,31 @@
-.PHONY: all target config build clean flash erase-ota app-flash monitor cppcheck
+.PHONY: app target config clean flash erase-ota app-flash monitor cppcheck
 
-all: build
-
-target:
-	idf.py set-target esp32s3
-
-config:
-	idf.py menuconfig
-
-build:
+app: | build
 	idf.py build
 
-clean:
+build:
+	-btrfs subvolume create build
+	mkdir -p build
+
+target: | build
+	idf.py set-target esp32s3
+
+config: | build
+	idf.py menuconfig
+
+clean: | build
 	idf.py clean
 
-flash: build
+flash: app
 	idf.py flash
 
-erase-ota:
+erase-ota: | build
 	idf.py erase-otadata
 
-app-flash: build
+app-flash: app
 	idf.py app-flash
 
-monitor:
+monitor: | build
 	idf.py monitor --timestamps --timestamp-format "%Y-%m-%d %H:%M:%S.%f" --no-reset
 
 cppcheck:
