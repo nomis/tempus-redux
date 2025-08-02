@@ -203,6 +203,18 @@ void Network::status() {
 	const esp_partition_t *boot = esp_ota_get_boot_partition();
 	const esp_partition_t *part = current;
 
+	{
+		const esp_app_desc_t *desc = esp_app_get_description();
+		std::string info = "Application ";
+
+		info += null_terminated_string(desc->project_name);
+		info += " | " + null_terminated_string(desc->version);
+		info += " | " + null_terminated_string(desc->idf_ver);
+		info += " | " + null_terminated_string(desc->date) + " " + null_terminated_string(desc->time);
+
+		syslog(TAG, info);
+	}
+
 	if (part->subtype == ESP_PARTITION_SUBTYPE_APP_FACTORY) {
 		part = esp_ota_get_next_update_partition(part);
 	}
@@ -232,6 +244,7 @@ void Network::status() {
 		if (!esp_ota_get_partition_description(part, &desc)) {
 			info += " | " + null_terminated_string(desc.project_name);
 			info += " | " + null_terminated_string(desc.version);
+			info += " | " + null_terminated_string(desc.idf_ver);
 			info += " | " + null_terminated_string(desc.date) + " " + null_terminated_string(desc.time);
 		}
 
