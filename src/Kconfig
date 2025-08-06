@@ -41,6 +41,16 @@ config CLOCKSON_OTA_URL
 	help
 		Download URL for OTA updates.
 
+config CLOCKSON_SIGNALLING_BITS_ADJUST_MS
+	int "Signalling bit duration adjustment"
+	range -50 50
+	default 0
+	help
+		The radio clock may not like very precise signalling bit durations.
+
+		Adjust the duration of signalling bits by adding or removing a quantity
+		of time in milliseconds.
+
 choice CLOCKSON_TEST_TIME
 	prompt "Test time signals"
 	default CLOCKSON_TEST_TIME_NONE

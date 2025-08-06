@@ -79,22 +79,22 @@ TimeSignal::TimeSignal(time_t t, uint64_t offset_us) : time_(t) {
 	/* Second markers */
 	for (size_t i = 1; i <= 59; i++) {
 		values_.emplace_back(ts.count(), false);
-		ts += milliseconds{100};
+		ts += milliseconds{100 + SIGNALLING_BITS_ADJUST_MS};
 
 		if (!a[i]) {
 			values_.emplace_back(ts.count(), true);
 		}
-		ts += milliseconds{100};
+		ts += milliseconds{100 + SIGNALLING_BITS_ADJUST_MS};
 
 		if (b[i] != a[i]) {
 			values_.emplace_back(ts.count(), !b[i]);
 		}
-		ts += milliseconds{100};
+		ts += milliseconds{100 + SIGNALLING_BITS_ADJUST_MS};
 
 		if (b[i]) {
 			values_.emplace_back(ts.count(), true);
 		}
-		ts += milliseconds{700};
+		ts += milliseconds{700 - (3 * SIGNALLING_BITS_ADJUST_MS)};
 	}
 }
 

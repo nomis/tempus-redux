@@ -54,6 +54,8 @@ public:
 private:
 	using data_t = std::bitset<60>;
 
+	static constexpr int SIGNALLING_BITS_ADJUST_MS = CONFIG_CLOCKSON_SIGNALLING_BITS_ADJUST_MS;
+
 	static void set_bcd(data_t &data, size_t begin, size_t end, unsigned int value);
 	static bool odd_parity(const data_t &data, size_t begin, size_t end);
 
