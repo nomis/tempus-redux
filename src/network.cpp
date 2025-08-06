@@ -159,8 +159,8 @@ void event_handler(void *arg, esp_event_base_t event_base,
 
 template<typename T, size_t size>
 static inline std::string null_terminated_string(T(&data)[size]) {
-		T *found = reinterpret_cast<T*>(std::memchr(&data[0], '\0', size));
-		return std::string{&data[0], found ? (found - &data[0]) : size};
+	T *found = reinterpret_cast<T*>(std::memchr(&data[0], '\0', size));
+	return std::string{&data[0], found ? (found - &data[0]) : size};
 };
 
 static const char *ota_state_string(esp_ota_img_states_t state) {

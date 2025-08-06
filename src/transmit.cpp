@@ -194,7 +194,7 @@ void Transmit::event() {
 			return;
 		}
 
-		ESP_ERROR_CHECK(gpio_set_level(pin_, signal.carrier ? active() : inactive()));
+		ESP_ERROR_CHECK(gpio_set_level(pin_, signal.carrier() ? active() : inactive()));
 		last_us_ = uptime_us;
 		current_.pop();
 	}

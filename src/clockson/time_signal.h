@@ -1,6 +1,6 @@
 /*
  * tempus-redux - ESP32 "Time from NPL" (MSF) Radio clock signal generator
- * Copyright 2024  Simon Arlott
+ * Copyright 2024-2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,11 +28,15 @@
 
 namespace clockson {
 
-struct Signal {
-	int64_t ts;
-	bool carrier;
+class Signal {
+public:
+	inline Signal(int64_t ts, bool carrier) : ts_(ts), carrier_(carrier) {}
+	inline uint64_t unsigned_ts() const { return ts_ < 0 ? 0 : ts_; }
+	inline bool carrier() const { return carrier_; }
 
-	inline uint64_t unsigned_ts() const { return ts < 0 ? 0 : ts; }
+private:
+	int64_t ts_;
+	bool carrier_;
 };
 
 class TimeSignal {
