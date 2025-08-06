@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+static_assert(sizeof(time_t) == 8);
+
 namespace clockson {
 
 Calendar::Calendar(time_t t) : Calendar(t, false) {
