@@ -58,6 +58,8 @@ private:
 	uint64_t last_signal_s_{0};
 	TimeSignal current_;
 	std::atomic<uint64_t> last_us_{0};
+	uint64_t min_timer_us_{UINT64_MAX};
+	uint64_t max_delay_us_{0};
 };
 
 } // namespace clockson

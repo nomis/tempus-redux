@@ -22,6 +22,7 @@
 #include <esp_timer.h>
 #include <driver/gpio.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <vector>
@@ -70,9 +71,8 @@ void Transmit::event(void *arg) {
 
 void Transmit::event() {
 	while (true) {
-		uint64_t uptime_us = esp_timer_get_time();
-
 		if (!current_.available()) {
+			uint64_t uptime_us = esp_timer_get_time();
 			/*
 			 * Convert this to microseconds before applying a test offset
 			 * because the default precision of nanoseconds doesn't support
@@ -154,11 +154,24 @@ void Transmit::event() {
 			current_ = TimeSignal{(time_t)now_s, offset_us};
 			last_signal_s_ = now_s;
 
-			std::vector<char> message(64);
+			std::vector<char> message(128);
 
-			std::snprintf(message.data(), message.size(), "Transmit %s (offset %" PRIu64 "us)",
-				current_.time().to_string().c_str(), offset_us);
+			if (min_timer_us_ != UINT64_MAX) {
+				std::snprintf(message.data(), message.size(),
+					"Transmit %s (offset %" PRIu64 "us,"
+					" min-timer %" PRIu64 "us,"
+					" max-delay %" PRIu64 "us)",
+					current_.time().to_string().c_str(),
+					offset_us, min_timer_us_, max_delay_us_);
+			} else {
+				std::snprintf(message.data(), message.size(),
+					"Transmit %s (offset %" PRIu64 "us)",
+					current_.time().to_string().c_str(),
+					offset_us);
+			}
 			network_.syslog(TAG, message.data());
+			min_timer_us_ = UINT64_MAX;
+			max_delay_us_ = 0;
 
 			/*
 			 * Skip everything that would have happened in the past if we start
@@ -188,13 +201,16 @@ void Transmit::event() {
 
 		auto signal = current_.next();
 		uint64_t signal_us = signal.unsigned_ts();
+		uint64_t uptime_us = esp_timer_get_time();
 
 		if (uptime_us < signal_us) {
+			min_timer_us_ = std::min(signal_us - uptime_us, min_timer_us_);
 			ESP_ERROR_CHECK(esp_timer_start_once(timer_, signal_us - uptime_us));
 			return;
 		}
 
 		ESP_ERROR_CHECK(gpio_set_level(pin_, signal.carrier() ? active() : inactive()));
+		max_delay_us_ = std::max(uptime_us - signal_us, max_delay_us_);
 		last_us_ = uptime_us;
 		current_.pop();
 	}
