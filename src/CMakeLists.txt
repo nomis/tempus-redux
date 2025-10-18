@@ -12,6 +12,7 @@ idf_component_register(
 		app_update
 		driver
 		espcoredump
+		esp_driver_gpio
 		esp_https_ota
 		esp_timer
 		esp_wifi

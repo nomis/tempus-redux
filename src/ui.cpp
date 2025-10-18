@@ -49,7 +49,7 @@ UserInterface::UserInterface(Network &network, Transmit &transmit)
 
 	led_strip_config.max_leds = 1;
 	led_strip_config.strip_gpio_num = 38;
-	led_strip_config.led_pixel_format = LED_PIXEL_FORMAT_GRB;
+	led_strip_config.color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB;
 	led_strip_config.led_model = LED_MODEL_WS2812;
 	rmt_config.resolution_hz = 10 * 1000 * 1000;
 
